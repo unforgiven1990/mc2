@@ -250,13 +250,13 @@ def return_global_navbar():
         "Others": ["System", "City", "Country", "Car"],
     }
 
-    navbar_template='<nav class="navbar navbar-expand-lg navbar-dark bg-primary" aria-label="Eighth navbar example"> <div class="container">  <a href="../../mc2/index/index.html" class="navbar-brand"> <img src="../../img/nio light.png" height="28" alt="CoolBrand"> </a>  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarinstance" aria-controls="navbarinstance" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarinstance"> <ul class="navbar-nav me-auto mb-2 mb-lg-0"> {} </ul> </div> </div> </nav>'
+    navbar_template='<nav class="navbar navbar-expand-lg navbar-dark bg-primary" aria-label="Eighth navbar example"> <div class="container">  <a href="../../page/index/index.html" class="navbar-brand"> <img src="../../img/nio light.png" height="28" alt="CoolBrand"> </a>  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarinstance" aria-controls="navbarinstance" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarinstance"> <ul class="navbar-nav me-auto mb-2 mb-lg-0"> {} </ul> </div> </div> </nav>'
     navbar_content = "" #for li in url template
     for key, array in dict_nav.items():
         navbar_content_li_template = f'<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="fa-solid {return_string_icon(key)}"></i> {key} </a> <div class="dropdown-menu" aria-labelledby="navbarDropdown">' + '{}</div></li>'
         navbar_content_li_content=""
         for counter,label in enumerate(array):
-            navbar_content_li_content=navbar_content_li_content+f'<a class="dropdown-item" href="../../mc2/{label}/{label}.html"><i class="fa-solid {return_string_icon(label)}"></i> {label}</a>'
+            navbar_content_li_content=navbar_content_li_content+f'<a class="dropdown-item" href="../../page/{label}/{label}.html"><i class="fa-solid {return_string_icon(label)}"></i> {label}</a>'
             if counter+1<len(array):#add divider
                 navbar_content_li_content = navbar_content_li_content + f'<div class="dropdown-divider"></div>'
 
@@ -280,7 +280,7 @@ def return_global_html():
         one_json = f'"{tab}"' + ": " + one_json + ","
         all_json = all_json + one_json
     all_json = ' var data={' + all_json + "};"
-    with open(fr"paste to github/bootstrap/js/data.js", "w", encoding="utf-8") as file:
+    with open(fr"bootstrap/js/data.js", "w", encoding="utf-8") as file:
         file.write(str(all_json))
 
     js_jquery = '<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>'
@@ -311,7 +311,7 @@ def return_global_html():
 
 
 def return_content_instance(instance, row, tab, dict_df):
-    h1=f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}">  <i class="fa-solid {return_string_icon(tab)} fa-xl"></i> {tab}: {instance} </h2> <a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3 float-right mt-3" ><i class="fa-solid fa-edit"></i> edit</a>  <a href="../../mc2/{tab}/{tab}.html" style="font-size:1.25rem;"  type="button" class="btn btn-primary btn-sm fs-3 mr-1 float-right mt-3" ><i class="fa-solid {return_string_icon(tab)}"></i> More {tab}</a> <hr/> '
+    h1=f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}">  <i class="fa-solid {return_string_icon(tab)} fa-xl"></i> {tab}: {instance} </h2> <a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3 float-right mt-3" ><i class="fa-solid fa-edit"></i> edit</a>  <a href="../../page/{tab}/{tab}.html" style="font-size:1.25rem;"  type="button" class="btn btn-primary btn-sm fs-3 mr-1 float-right mt-3" ><i class="fa-solid {return_string_icon(tab)}"></i> More {tab}</a> <hr/> '
     #h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"><div style="max-width:85%;"><i class="fa-solid {return_string_icon(tab)} fa-xl"></i> {tab}   </div> <a href="{return_string_editurl(tab)}" style="float:right;font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-edit"></i> edit</a></h2>'
 
     ul="<ul>{}</ul>"
@@ -375,10 +375,10 @@ def return_component_small_header(is_direct=True):
     return result
 
 def return_word_class_url(class_tab):
-    return fr"../../mc2/{class_tab}/{class_tab}.html"
+    return fr"../../page/{class_tab}/{class_tab}.html"
 
 def return_word_instance_url(class_tab, instance):
-    return fr"../../mc2/{class_tab}/{instance}.html"
+    return fr"../../page/{class_tab}/{instance}.html"
 
 def return_component_header(df,tab, dict_df, instance):
     try:
@@ -406,7 +406,7 @@ def return_content_class(tab, df,dict_df):
     for (fakekey, row),key in zip(df.iterrows(),df[tab]):
         if pd.isna(key) or key is None:
             continue
-        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-5 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../mc2/{tab}/{key}.html">{key}</a></h5>'+'{}</div></div>'
+        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-5 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key}</a></h5>'+'{}</div></div>'
         cardmiddle=""
         for row_key, row_item in row.items():
             if row_key!=tab:
@@ -514,7 +514,7 @@ def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], h
 
     # add nodes
     for tab, df in dict_df.items():
-        js_middle = js_middle + '{ data: { id: "' + tab + f'",  label:"{tab.replace("_", " ")}", href: "' + f'../../mc2/{tab}/{tab}.html' + '"} },'
+        js_middle = js_middle + '{ data: { id: "' + tab + f'",  label:"{tab.replace("_", " ")}", href: "' + f'../../page/{tab}/{tab}.html' + '"} },'
 
     checklist = []
     # add edges
@@ -665,18 +665,18 @@ def create_html():
     dict_df,wb=get_dict_df()
     dict_extrawurst = {}
     for tab, df in dict_df.items():
-        Path(f"paste to github/mc2/{tab}").mkdir(parents=True, exist_ok=True)
+        Path(f"page/{tab}").mkdir(parents=True, exist_ok=True)
         if tab in dict_extrawurst:
             result=dict_extrawurst[tab](tab,df,dict_df)
         else:
             result=return_content_class(tab=tab, df=df,dict_df=dict_df)
-        with open(fr"paste to github/mc2/{tab}/{tab}.html", "w", encoding="utf-8") as file:
+        with open(fr"page/{tab}/{tab}.html", "w", encoding="utf-8") as file:
             file.write(str(result))
 
 
     #instances
     for tab, df in dict_df.items():
-        Path(f"paste to github/mc2/{tab}").mkdir(parents=True, exist_ok=True)
+        Path(f"page/{tab}").mkdir(parents=True, exist_ok=True)
         try:
             df.set_index(tab, inplace=True)
         except:
@@ -686,15 +686,15 @@ def create_html():
                 result = return_content_instance(instance=instance, row=row, tab=tab, dict_df=dict_df)
                 # change the word primary to success
                 result = result.replace("primary", 'primary')
-                with open(fr"paste to github/mc2/{tab}/{instance}.html", "w", encoding="utf-8") as file:
+                with open(fr"page/{tab}/{instance}.html", "w", encoding="utf-8") as file:
                     file.write(str(result))
 
     #index html
-    Path(f"paste to github/mc2/index").mkdir(parents=True, exist_ok=True)
+    Path(f"page/index").mkdir(parents=True, exist_ok=True)
     result = return_content_index(dict_df)
 
 
-    with open(fr"paste to github/mc2/index/index.html", "w", encoding="utf-8") as file:
+    with open(fr"page/index/index.html", "w", encoding="utf-8") as file:
         file.write(str(result))
 
 

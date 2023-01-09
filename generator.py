@@ -396,6 +396,38 @@ def content_generator():
 
 
 
+def merge():
+    """
+    merges 3 picture into 1 post together based on order in the folder
+
+
+    1. loop over the folder to get 3 picture pair
+    2. output
+    :return:
+    """
+
+    counter=0
+    prev=[]
+    # copy image to other folder
+    for (root, dirs, files) in os.walk("merge", topdown=True):
+        for counter, file in enumerate(files):
+            prev += [file]
+            if len(prev)==3:
+                #merge
+                image1=Image.open(f'merge/{prev[0]}')
+                image2=Image.open(f'merge/{prev[1]}')
+                image3=Image.open(f'merge/{prev[2]}')
+                new_image = Image.new('RGB', (3 * image1.size[0], image1.size[1]), (250, 250, 250))
+                new_image.paste(image1, (image1.size[0]*0, 0))
+                new_image.paste(image2, (image1.size[0]*1, 0))
+                new_image.paste(image3, (image1.size[0]*2, 0))
+                new_image.save(f"output/{counter}.jpg", "JPEG")
+                prev = []
+                print(f"created image {counter}")
+
+
+
+
 if __name__ == '__main__':
     #by_Strategy()
     #by_Department()
