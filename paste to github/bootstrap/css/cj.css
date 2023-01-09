@@ -1,0 +1,39 @@
+.navbar-dark .navbar-nav .nav-link {
+    color: rgb(255 255 255) !important;
+}
+
+
+ul {
+    margin: 0; /* To remove default bottom margin */
+    padding-left: 1.25rem; /* To remove default left padding */
+}
+
+#cy {
+  width: 100%;
+  display: block;
+  align:center;
+}
+
+.height100{
+  height: 100%;
+}
+
+.width100{
+width: 100%;
+}
+
+.height50{
+  height: 70%;
+}
+
+
+
+input[type=checkbox]
+{
+  /* Double-sized Checkboxes */
+  -ms-transform: scale(2); /* IE */
+  -moz-transform: scale(2); /* FF */
+  -webkit-transform: scale(2); /* Safari and Chrome */
+  -o-transform: scale(2); /* Opera */
+  padding: 10px;
+}
