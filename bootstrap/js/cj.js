@@ -1,3 +1,20 @@
+function get_all_class(){
+result=[];
+$.each(data, function(key,value) {
+        result.push(key);
+    });
+    return result;
+}
+
+
+function get_all_columns(){
+
+}
+
+function get_cell(){
+
+}
+
 
 function return_attributes2(class_tab){
     var df = data[class_tab]; //this will get df
@@ -7,7 +24,7 @@ function return_attributes2(class_tab){
 }
 
 
-
+//return as label not as array
 function return_attributes(class_tab){
     var df = data[class_tab]; //this will get df
     var potential_result=[]
@@ -18,12 +35,11 @@ function return_attributes(class_tab){
             potential_result=new_result;
         }
     });
-
     return potential_result;
 }
 
-var selected_destination_class='';
 
+var selected_destination_class='';
 function traverse_to(start_node, end_node, cy){
 
 selected_destination_class=end_node;
@@ -183,15 +199,248 @@ var traverse_nodes=traverse_to(current_class, event.target.id(), cy);
         });
 
     });//end of step 1 for each loop
-
-
 }
 
 
 
+function space2underscore(word){
+return word.replaceAll(" ","_")
+}
+
+function underscore2space(word){
+return word.replaceAll("_"," ")
+}
+
+function create_cy(id , current_class='', current_instance=''){
+    var elements=[]
+    var all_class=get_all_class();
+
+    //calculate nodes
+    $.each(all_class, function(key,val) {
+        if (current_class == val && checkdata(current_instance)){
+            var label = current_instance+" ("+ underscore2space(val)+")";
+            elements.push({data: {'id':val , 'label': label, 'href':"../../page/"+val+"/"+val+".html"} });
+
+        }else{
+            var label = underscore2space(val);
+            elements.push({data: {'id':val , 'label': label, 'href':"../../page/"+val+"/"+val+".html"} });
+
+        }
+    //elements.push({data: {'id':val , 'label': label, 'href':"../../page/"+val+"/"+val+".html"} });
+    });
+
+    //calculate edges
+    var alreadydone=[];
+    $.each(all_class, function(key,val) {//1. for each tab
+     var all_attributes_labels=return_attributes(val);//return all attributes of that particular class /tab
+        $.each(all_attributes_labels, function(row_index,row_val) { //2. for each tab, for each column
+            console.log("compare: ",val, " vs ",row_val);
+            if (row_val.includes("For ") || row_val.includes("By ")){
+                   console.log("yer");
+                var replaced_val = row_val.replaceAll("By ","");
+                replaced_val = replaced_val.replaceAll("For ","");
+                console.log("replaced val ",replaced_val);
+                if (replaced_val==val){
+                    return;//index which is the class himself
+                }
+                if (all_class.includes(replaced_val)){
+                    if(!alreadydone.includes(val+replaced_val) && !alreadydone.includes(replaced_val+val)){
+                        elements.push({data: {'id':val+'_'+row_val , 'source': val, 'target':replaced_val} });
+                        alreadydone.push(val+replaced_val);
+                        alreadydone.push(replaced_val+val);
+                    }
+            }
+            }
+
+
+        });
+    });
+
+
+    var cy = cytoscape({
+     container: document.getElementById(id), // container to render in
+    wheelSensitivity:0.05,
+     autounselectify: false,
+      elements: elements, //list of graph elements to start with
+      style: [ // the stylesheet for the graph
+        {
+          selector: 'node',
+          style: {
+            'background-color': "#999",
+            'shape':'round-rectangle',
+            'label': 'data(label)',
+            'width': '90px',
+            'height': '50px',
+            'color': '#fff',
+            'text-halign': 'center',
+            'text-valign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': "5px",
+            'text-overflow-wrap': "whitespace",
+          }
+        },
+        {
+          selector: '.red',
+          css: {
+            'background-color': '#0099ff',
+            'line-color': '#0099ff',
+            'z-index': 99999,
+          }
+        },
+        {
+          selector: '.bigger',
+          css: {
+            'width': '120px',
+            'height': '70px',
+          }
+        },
+
+        {
+          selector: '.blue',
+          css: {
+            'background-color': '#0099ff',
+          }
+        },
+
+        {
+          selector: 'edge.blue',
+          css: {
+            'line-color': 'red',
+          }
+        },
+
+        {
+          selector: '.edge_default',
+          css: {
+            'line-color': '#eee',
+            'z-index':-1,
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'width': 4,
+            'target-arrow-color': '#ccc',
+            'target-arrow-shape': '',
+            'curve-style': 'bezier'
+          }
+        }
+      ],
+
+      layout: {
+        name: 'breadthfirst',
+        spacingFactor: 0.85,
+        avoidOverlap: true,
+        animate: true,
+        animationDuration: 1000,
+      },
+      ready: function(){
+
+      }
+    });
+
+
+    //initialization
+    var current_class =get_current_class();
+    var current_class_attributes=return_attributes(current_class);
+    cy.$('edge').addClass('edge_default');
+    //cy.$('"""+ ",".join(["#"+x for x in highlight_classes])+ """').addClass('blue');
+    if (current_class!="index" ){
+    traverse_to(current_class,current_class,cy);
+    }
+
+
+
+    // right click even to jump to next page
+    cy.on('cxttap', 'node', function(){
+      try { // your browser may block popups
+        window.open( this.data('href') ,"_self");
+      } catch(e){ // fall back on url change
+        window.location.href = this.data('href');
+      }
+    });
+
+    // bind tapstart to edges and highlight the connected nodes
+    cy.bind('tapstart', 'edge', function(event) {
+      var connected = event.target.connectedNodes();
+      //connected.addClass('blue');
+    });
+
+
+    // bind tapend to edges and remove the highlight from the connected nodes
+    cy.bind('tapend', 'edge', function(event) {
+      var connected = event.target.connectedNodes();
+      //connected.removeClass('blue');
+    });
+
+    // bind tapend to node and remove the highlight from the connected nodes
+    cy.bind('tapstart', 'node', function(event) {
+    update_card_display(cy,event);
+    });//end of binding
+
+    //make instance node look bigger
+    cy.$('#'+current_class).addClass('bigger');
+
+return cy
+}
+
+function checkdata(value){
+
+if( !value ) {
+return false;
+}else if (typeof value == 'undefined' ){
+return false;
+}else if (typeof value === 'undefined' ){
+return false;
+}else if (value == 'undefined' ){
+return false;
+}else if (value === 'undefined' ){
+return false;
+}else if (value == null){
+return false;
+}else if (value === null){
+return false;
+}else if (value.length == 0){
+return false;
+}else if (value.length === 0){
+return false;
+}else if (value.length == ''){
+return false;
+}else if (value.length === ''){
+return false;
+}
+return true;
+
+}
+
+
+$(document).ready(function () {
+var page_class= $("#header").data("current_class");
+var page_instance= $("#header").data("current_instance");
+
+
+console.log("before", page_class, " , ",page_instance);
+if (page_class=="index"){//index page
+    console.log("index",page_class);
+    var cy= create_cy("cy");
+    cy.$('node').addClass('blue');
+
+//highlight and make all nodes blue
+}else if (checkdata(page_class) && checkdata(page_instance)){//instance page
+    var cy= create_cy("cy" , page_class,page_instance);
+    var cy2=create_cy("cy2" );
+
+}else if(page_class!="" && page_instance==""){ // class page
+    var cy= create_cy("cy" , page_class);
+    console.log("class page");
+}
+
+
+});
+
+
 
 /*
-
 $('#indirect_attribute').change(function(){
 var indirect_class= $('#indirect_class').val();
 var indirect_attribute= $('#indirect_attribute').val();

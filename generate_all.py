@@ -36,12 +36,19 @@ from deep_translator import (GoogleTranslator,
 def space_replacer(word):
     return word.replace(" ","_")
 
+dict_df_wb_pair=[] #to accelerate replace, not repeating the process
 def get_dict_df():
+    global dict_df_wb_pair
+    if dict_df_wb_pair:
+        return dict_df_wb_pair
+
     for excel_data_raw in glob.glob("*.xlsx"):
         if excel_data_raw !="class_map.xlsx":
             dict_df = cleanup(pd.read_excel(excel_data_raw, sheet_name=None))
             wb = openpyxl.load_workbook(excel_data_raw)
-            return [dict_df,wb]
+            dict_df_wb_pair= [dict_df,wb]
+            return dict_df_wb_pair
+
 
 def create_class_map():
     dict_df,wb=get_dict_df()
@@ -53,6 +60,10 @@ def create_class_map():
                 df_class_map.at[tab,replaced_col]=1
     df_class_map.to_excel("class_map.xlsx")
 
+def generate_lark_to_mc2_link():
+    dict_df,wb=get_dict_df()
+    for tab,df in dict_df.items():
+        print(f'HYPERLINK(CONCATENATE("https://unforgiven1990.github.io/mc2/page/","{tab}","/",SUBSTITUTE([{tab}]," ","_"),".html"), "LINK")')
 
 def parse_to_json():
     pass
@@ -89,37 +100,43 @@ def cleanup(dict_df):
     forbidden_chars={"@nio.com":'',
                      "@nio.io":'',
                      ",":'',
-                     ".":'_',
-                     "/":'_',
+                     ".":'',
+                     "/":'',
                      " ":'_', #still empty space in tab data not converted
                      }
+
+    #for each tab in df
     for tab, df in dict_df.items():
         #create a new helper column
         df["RemoveMe"]=df[tab].copy()
 
-        for item, (index, row) in zip(df["RemoveMe"],df.iterrows()):
-            if pd.isna(item):
+        #copied_index_item is potentially wrong and needs to be replaced
+        for copied_index_item, (index, row) in zip(df["RemoveMe"],df.iterrows()):
+            if pd.isna(copied_index_item):
                 continue
 
-            for forbidden_char in forbidden_chars:
+            """for forbidden_char in forbidden_chars:
                 if forbidden_char not in item: #item is already clean, no need to cleanup
-                    continue
+                    continue"""
 
-            correct_item=item
+            #replace all index data = index
+            correct_item=copied_index_item # starting position
             for forbidden_char, toreplace in forbidden_chars.items():
                 correct_item=correct_item.replace(forbidden_char,toreplace)
             df.at[index,"RemoveMe"]=correct_item
-            dict_to_replace[item]=correct_item
+            dict_to_replace[copied_index_item]=correct_item
+
+            #replace all non index data, =row
+
 
         # create a new helper column
         df[tab] = df["RemoveMe"]
         df.drop('RemoveMe', axis=1,inplace=True)
 
-
+    # complete df replace
     for tab, df in dict_df.items():
-        df=df.replace(dict_to_replace,inplace=False)
+        df=df.replace(dict_to_replace,inplace=False,regex=True)
         new_dict_df[tab]=df
-
 
     return new_dict_df
 
@@ -274,6 +291,7 @@ def return_global_html():
     #create data
     dict_df,wb = get_dict_df()
 
+    #create json of df
     all_json = ''
     for tab, df in dict_df.items():
         one_json = df.to_json(orient="records")
@@ -282,6 +300,10 @@ def return_global_html():
     all_json = ' var data={' + all_json + "};"
     with open(fr"bootstrap/js/data.js", "w", encoding="utf-8") as file:
         file.write(str(all_json))
+
+
+    #create edgematrix
+
 
     js_jquery = '<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>'
     js_popperjs = '<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>'
@@ -311,8 +333,6 @@ def return_global_html():
 
 
 def return_content_instance(instance, row, tab, dict_df):
-    h1=f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}">  <i class="fa-solid {return_string_icon(tab)} fa-xl"></i> {tab}: {instance} </h2> <a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3 float-right mt-3" ><i class="fa-solid fa-edit"></i> edit</a>  <a href="../../page/{tab}/{tab}.html" style="font-size:1.25rem;"  type="button" class="btn btn-primary btn-sm fs-3 mr-1 float-right mt-3" ><i class="fa-solid {return_string_icon(tab)}"></i> More {tab}</a> <hr/> '
-    #h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"><div style="max-width:85%;"><i class="fa-solid {return_string_icon(tab)} fa-xl"></i> {tab}   </div> <a href="{return_string_editurl(tab)}" style="float:right;font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-edit"></i> edit</a></h2>'
 
     ul="<ul>{}</ul>"
     lis=""
@@ -335,16 +355,16 @@ def return_content_instance(instance, row, tab, dict_df):
 
 
     component_cy, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50")
-
-    label_direct_attribute=return_component_small_header(True)
-    label_indirect_attribute=return_component_small_header(False)
+    label_direct_attribute=return_component_small_header("1. Direct Relations")
+    label_indirect_attribute=return_component_small_header("2. Indirect Relations")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
     spacer= return_component_spacer()
     template_card=return_template_card()
     indirect_chart=return_indirect_chart()
+    explainer=f'<p class="fs-1 pb-1 text-secondary">Right Click on the node to traverse</p>'
 
-    direct_part=(spacer+ label_direct_attribute+ ul.format(lis))
-    indirect_part= spacer+ label_indirect_attribute+  component_cy +indirect_chart
+    direct_part=(spacer+ label_direct_attribute+ ul.format(lis))+"<hr/>"
+    indirect_part= spacer+ label_indirect_attribute+ explainer+ component_cy +indirect_chart
 
     content=header + direct_part + indirect_part
     return template.format(content=content, jsinclude=component_cy_js)
@@ -365,14 +385,11 @@ def return_component_spacer():
     return result
 
 def return_indirect_chart():
-    return '<p>todo<p/>'
+    return f"<div id='cy2' class='border border-secondary border-5 rounded mb-3 height50'></div>"
 
-def return_component_small_header(is_direct=True):
-    if is_direct:
-        result='<h4>1. Direct Information:</h4>'
-    else:
-        result='<h4>2. Indirect Information: </h4>'
-    return result
+def return_component_small_header(text=""):
+    return f'<h4>{text}</h4>'
+
 
 def return_word_class_url(class_tab):
     return fr"../../page/{class_tab}/{class_tab}.html"
@@ -387,16 +404,19 @@ def return_component_header(df,tab, dict_df, instance):
     except:
         classcount=""
 
-    h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} fa-xl"></i></a>'
-    edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-edit"></i></a>'
+    if instance:
+        h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} fa-xl"></i></a>'
+    else:
+        h1_icon=f'<i class="fa-solid {return_string_icon(tab)} fa-xl"></i>'
+    edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-expand"></i></a>'
     other_classes=""
     if instance:
         explainer=f''
     else:
         explainer = f'<p class="fs-1 pb-1 text-secondary">{return_string_component(tab)}</p>'
 
-    header_text= f'{tab}: {instance}' if instance else tab
-    h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}">{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
+    header_text= f'{tab}: {instance}' if instance else "All "+tab
+    h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
 
     return h1+"<hr/>"
 
@@ -431,13 +451,13 @@ def return_content_class(tab, df,dict_df):
     if "Department" in tab:
         iframe = "<iframe src='https://nio.feishu.cn/wiki/wikcnE50PKAKxW6u0IaIOyxyzTd#mindmap' height='100%' width='100%' ></iframe><hr/>" +iframe
 
-    direct_relation_label=return_component_small_header(is_direct=True)
-    indirect_relation_label=return_component_small_header(is_direct=False)
+    direct_relation_label=return_component_small_header(text="1. Specific Strategy:")
+    indirect_relation_label=return_component_small_header(text="2. Relation to others:")
     header=return_component_header(df,tab, dict_df, instance="")
     template_card=return_template_card()
 
     part_direct=(return_component_spacer()+direct_relation_label+iframe)
-    part_inddirect=(return_component_spacer()+indirect_relation_label+component_cy+cards)
+    part_inddirect=(return_component_spacer()+indirect_relation_label+component_cy)
 
     content= header+part_direct+part_inddirect
     return template.format(content=content  ,
@@ -449,7 +469,7 @@ def return_content_class(tab, df,dict_df):
 
 
 def return_content_index(dict_df):
-    h1 = f'<h2 class="pt-5 pb-1"><i class="fa-solid fa-face-smile-wink fa-xl"></i> What is to mc² system?</h2>'
+    h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="index"><i class="fa-solid fa-face-smile-wink fa-xl"></i> What is to mc² system?</h2>'
     explainer = f'<p class="fs-1 pb-3 text-secondary">mc² is a system made by <b>CJ</b> to understand complex relations within NIO Europe: such as process relations, user journey, strategy to process relations and more. Mc² stands for Energy and is derived from the famous equation E=mc². The mission is to enable all people and give them energy.</p><hr/>'
     p = f'<p class="fs-1  text-secondary">  <ul><b>How to Use:</b><li> <b>Left Click</b>: move entity around.</li><li><b>Right Click</b>: jump to the details page.</li><li><b>Mouse Wheel</b>: zoom in and out.</li></ul></p>'
     p2 = f'<p class="fs-1  text-secondary">  <ul><b>Useful Examples:</b><li> <b>Employee -> Employee Process -> KPI</b>: Show all relevant KPIs to one employee from his perspective. </li><li><b>KPI -> Employee Process -> Employee</b>: See all relevant People related to one KPI. Useful for leaders. </li><li><b>Role -> Employee -> System</b>: See all systems that a particular role is using</li></ul></p>'
@@ -496,9 +516,9 @@ def return_component_filter(tab, df):
 
 
 
-def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], height="height100"):
+def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], height="height100", add_instance_label=""):
     """cy=cytoscape.js"""
-    cy = f"<div id='cy' lul='lol' class='border border-secondary border-5 rounded mb-3 {height}'></div>"
+    cy = f"<div id='cy' class='border border-secondary border-5 rounded mb-3 {height}'></div>"
 
     js_partstart = """
     $(document).ready(function () {
@@ -657,7 +677,8 @@ def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], h
 """
 
     chart_js = js_partstart + js_middle + js_partend
-    return [cy,f"<script>{chart_js}</script>"]
+    #return [cy,f"<script>{chart_js}</script>"]
+    return [cy,f""]
 
 
 def create_html():
@@ -703,7 +724,7 @@ def create_html():
 
 
 if __name__ == '__main__':
-
+    generate_lark_to_mc2_link()
     create_class_map()
     return_global_navbar()
     return_global_html()
