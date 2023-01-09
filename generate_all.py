@@ -102,6 +102,7 @@ def cleanup(dict_df):
                      ",":'',
                      ".":'',
                      "/":'',
+                     ":":'',
                      " ":'_', #still empty space in tab data not converted
                      }
 
@@ -168,7 +169,7 @@ def return_string_icon(word):
     dict_icon={
         "Departments": "fa-sitemap",
         "L1_Department":"fa-folder-tree",
-        "Department":"fa-folder-tree",
+        "Department":"fa-sitemap",
         "L2_Department":"fa-folder-tree",
         "L3_Department":"fa-folder-tree",
         "Leader":"fa-user-tie",
@@ -260,10 +261,9 @@ def return_string_editurl(word):
 
 def return_global_navbar():
     dict_nav = {
-        "Departments": ["Department"],
-        "People": [ "Employee", "Role"],
-        "Process": ["User_Process", "Employee_Process", "KPI", "User_Journey", "Employee_Journey"],
+        "People": [  "Role", "Employee","Department"],
         "Strategy": ["Strategy", "Capability", "Business_Model"],
+        "Process": ["User_Process", "Employee_Process",  "User_Journey", "Employee_Journey", "KPI"],
         "Others": ["System", "City", "Country", "Car"],
     }
 
@@ -450,8 +450,10 @@ def return_content_class(tab, df,dict_df):
 
     if "Department" in tab:
         iframe = "<iframe src='https://nio.feishu.cn/wiki/wikcnE50PKAKxW6u0IaIOyxyzTd#mindmap' height='100%' width='100%' ></iframe><hr/>" +iframe
+    elif  "Strategy" in tab:
+        iframe = "<iframe src='https://nio.feishu.cn/wiki/wikcn5MZTGmEfOMR1HxJ45RrvVb#mindmap' height='100%' width='100%' ></iframe><hr/>" + iframe
 
-    direct_relation_label=return_component_small_header(text="1. Specific Strategy:")
+    direct_relation_label=return_component_small_header(text=f"1. Specific {tab}:")
     indirect_relation_label=return_component_small_header(text="2. Relation to others:")
     header=return_component_header(df,tab, dict_df, instance="")
     template_card=return_template_card()

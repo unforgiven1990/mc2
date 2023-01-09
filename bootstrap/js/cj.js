@@ -218,7 +218,7 @@ function create_cy(id , current_class='', current_instance=''){
     //calculate nodes
     $.each(all_class, function(key,val) {
         if (current_class == val && checkdata(current_instance)){
-            var label = current_instance+" ("+ underscore2space(val)+")";
+            var label = underscore2space(current_instance) +" ("+ underscore2space(val)+")";
             elements.push({data: {'id':val , 'label': label, 'href':"../../page/"+val+"/"+val+".html"} });
 
         }else{
