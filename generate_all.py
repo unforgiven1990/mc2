@@ -343,12 +343,12 @@ def return_content_instance(instance, row, tab, dict_df):
             if pd.isna(val):
                 continue
             if "," not in val:
-                lis = lis + f"<li>{instance}: <a href='../{for_what}/{space_replacer(val)}.html'>{val}</a></li>"
+                lis = lis + f"<li>{instance}: <a href='../{for_what}/{space_replacer(val)}.html'>{val.replace('_',' ')}</a></li>"
             else:
                 ul2 = "<ul>{}</ul>"
                 lis2 = ""
                 for val_item in val.split(","):
-                    lis2=lis2+f"<li><a href='../{for_what}/{space_replacer(val_item)}.html'>{val_item}</a></li>"
+                    lis2=lis2+f"<li><a href='../{for_what}/{space_replacer(val_item)}.html'>{val_item.replace('_',' ')}</a></li>"
                 lis = lis + f"<li>{instance}: {ul2.format(lis2)}</li>"
         else:
             lis=lis+f"<li>{instance}: {val}</li>"
@@ -356,14 +356,30 @@ def return_content_instance(instance, row, tab, dict_df):
 
     component_cy, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50")
     label_direct_attribute=return_component_small_header("1. Direct Relations")
+    label_direct_compare=return_component_small_header("Compare to", component_inside="<button type='button' class='btn btn-primary'>Select</button>")
     label_indirect_attribute=return_component_small_header("2. Indirect Relations")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
     spacer= return_component_spacer()
     template_card=return_template_card()
     indirect_chart=return_indirect_chart()
-    explainer=f'<p class="fs-1 pb-1 text-secondary">Right Click on the node to traverse</p>'
+    explainer=f'<p class="fs-1 pb-1 text-secondary"><ul><b>How to use:</b><li><b>Left Click</b>: See indirect relations from {tab} : {real_instance} to the selection.</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul></p>'
 
-    direct_part=(spacer+ label_direct_attribute+ ul.format(lis))+"<hr/>"
+    grid="""
+    <div class="container">
+  <div class="row">
+  <div class="col">
+      {}
+    </div>
+    <div class="col">
+      {}
+        </div>
+    </div>
+    </div><hr/>
+    """
+
+    direct_part_left=(spacer+ label_direct_attribute+ ul.format(lis))
+    direct_part_right=(spacer+ label_direct_compare+ "<p>Selected compare to data = todo </p>")
+    direct_part=grid.format(direct_part_left,direct_part_right)
     indirect_part= spacer+ label_indirect_attribute+ explainer+ component_cy +indirect_chart
 
     content=header + direct_part + indirect_part
@@ -385,10 +401,10 @@ def return_component_spacer():
     return result
 
 def return_indirect_chart():
-    return f"<div id='cy2' class='border border-secondary border-5 rounded mb-3 height50'></div>"
+    return f"<div id='cy2' class='border border-secondary border-5 rounded mb-3 height100'></div>"
 
-def return_component_small_header(text=""):
-    return f'<h4>{text}</h4>'
+def return_component_small_header(text="",component_inside=''):
+    return f'<h4>{text}{component_inside}</h4>'
 
 
 def return_word_class_url(class_tab):
@@ -415,7 +431,7 @@ def return_component_header(df,tab, dict_df, instance):
     else:
         explainer = f'<p class="fs-1 pb-1 text-secondary">{return_string_component(tab)}</p>'
 
-    header_text= f'{tab}: {instance}' if instance else "All "+tab
+    header_text= f'<a class="text-muted">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab
     h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
 
     return h1+"<hr/>"
