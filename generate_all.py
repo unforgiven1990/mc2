@@ -371,7 +371,27 @@ def return_content_instance(instance, row, tab, dict_df):
     template_card=return_template_card()
     cy2=return_indirect_chart()
     layout_select="<select id='layoutselect'><option></option></select>"
+    fullscreen_button='<button class="btn btn-primary ml-1" id="fullscreen_button"> <i class="fa fa-expand"></i></button>'
     explainer=f'<ul><li><b>Left Click</b>: See indirect relations from {real_instance.replace("_"," ")}</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul>'
+    modal="""
+    
+
+<div id="modal" class="modal modal-fullscreen-xl" id="modal-fullscreen-xl" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+            
+      <div class="modal-body" id="modal_body">
+        <div id='cy3' class=''></div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal_close" type="button" class="btn btn-primary" data-dismiss="modal" data-bs-dismiss="modal" >Close</button>
+  
+      </div>
+    </div>
+  </div>
+</div>
+    """
+
 
 
     grid="""
@@ -391,7 +411,7 @@ def return_content_instance(instance, row, tab, dict_df):
     direct_part_right=("<div class='width100'>"+spacer+ label_direct_compare+ "</div>")
     direct_part=grid.format(direct_part_left,direct_part_right)
     indirect_part= spacer+ spacer+label_indirect_attribute+ explainer + cy1+cy2
-    indirect_part= grid.format(spacer+ spacer+label_indirect_attribute+ explainer, spacer+ label_indirect_attribute2+ layout_select)+ cy1+cy2
+    indirect_part= grid.format(spacer+ spacer+label_indirect_attribute+ explainer, spacer+ label_indirect_attribute2 + layout_select + fullscreen_button + modal)+ cy1+cy2
 
     content=header + direct_part + indirect_part
     return template.format(content=content, jsinclude=component_cy_js)

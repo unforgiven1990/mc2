@@ -310,6 +310,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
         cy.bind('tapstart', 'node', function(event) {
             var traverse_nodes = traverse_to(page_class, event.target.id(), cy);
             dict_cy["cy2"]=create_cy(id = "cy2", current_class = page_class, current_instance = page_instance, elements = generate_instance_elements(page_class, event.target.id()));
+            dict_cy["cy3"]=create_cy(id = "cy3", current_class = page_class, current_instance = page_instance, elements = generate_instance_elements(page_class, event.target.id()));
         }); //end of binding
 
     }else  if (id == "cy2"){
@@ -759,7 +760,7 @@ return ul ;
 }
 
 function get_layout_options(){
-var result=["breadthfirst layout", "cose layout",  "concentric layout","grid layout","circle layout"];
+var result=["breadthfirst layout", "cose layout",  "concentric layout","circle layout"];
 return result;
 }
 
@@ -771,13 +772,31 @@ $(document).ready(function() {
     //get all vailable tabs
     update_select("#filter_class",get_all_class());
     update_select("#layoutselect", get_layout_options());
+
+    $('#fullscreen_button').click(function(){
+        $("#modal").modal("show");
+        //$('#modal_body').empty();
+        //$('#cy2').clone().appendTo('#modal_body');
+    });
+
+    $('#modal_close').click(function(){
+        $("#modal").modal("hide");
+        //$('#modal_body').empty();
+        //$('#cy2').clone().appendTo('#modal_body');
+    });
+
     $('#layoutselect').change(function(){
         var selected_layout = $('#layoutselect').val();
-        var layout = dict_cy["cy2"].layout({
-            name: selected_layout.replace(" layout", "")
+
+        $.each(["cy2","cy3"], function(df_index, cy_index) {
+            var layout = dict_cy[cy_index].layout({
+                name: selected_layout.replace(" layout", "")
+            });
+            layout.run();
         });
 
-        layout.run();
+
+
     });
 
     $('#filter_class').change(function(){
