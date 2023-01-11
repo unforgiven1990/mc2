@@ -365,12 +365,13 @@ def return_content_instance(instance, row, tab, dict_df):
 
     label_direct_compare="<div class='row' >"+button1+button2 + "</div><div id='versus'></div>"
     label_indirect_attribute=return_component_small_header("2. Indirect Relations")
+    label_indirect_attribute2=return_component_small_header("Result")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
     spacer= return_component_spacer()
     template_card=return_template_card()
     cy2=return_indirect_chart()
     layout_select="<select id='layoutselect'><option></option></select>"
-    explainer=f'<p class="fs-1 pb-1 text-secondary"><ul><b>How to use:</b><li><b>Left Click</b>: See indirect relations from {tab} : {real_instance} to the selection.</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul></p>'+layout_select
+    explainer=f'<ul><li><b>Left Click</b>: See indirect relations from {real_instance.replace("_"," ")}</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul>'
 
 
     grid="""
@@ -383,13 +384,14 @@ def return_content_instance(instance, row, tab, dict_df):
       {}
         </div>
     </div>
-    </div><hr/>
+    </div>
     """
 
     direct_part_left=("<div class='width100'>"+spacer+ label_direct_attribute+ ul+ "</div>")
     direct_part_right=("<div class='width100'>"+spacer+ label_direct_compare+ "</div>")
     direct_part=grid.format(direct_part_left,direct_part_right)
     indirect_part= spacer+ label_indirect_attribute+ explainer + cy1+cy2
+    indirect_part= grid.format(spacer+ label_indirect_attribute+ explainer, spacer+ label_indirect_attribute2+ layout_select)+ cy1+cy2
 
     content=header + direct_part + indirect_part
     return template.format(content=content, jsinclude=component_cy_js)
@@ -446,12 +448,20 @@ def return_component_header(df,tab, dict_df, instance):
     return h1+"<hr/>"
 
 
+def return_linkable_attributes(df):
+    result=[]
+    for col in df.columns:
+        if "For " in col or  "By " in col:
+            replaced_col=col.replace("For ","").replace("By ","")
+            result=result+[replaced_col]
+    return result
+
 def return_content_class(tab, df,dict_df):
     cards=''
     for (fakekey, row),key in zip(df.iterrows(),df[tab]):
         if pd.isna(key) or key is None:
             continue
-        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-5 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key}</a></h5>'+'{}</div></div>'
+        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-5 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
         cardmiddle=""
         for row_key, row_item in row.items():
             if row_key!=tab:
@@ -466,9 +476,6 @@ def return_content_class(tab, df,dict_df):
     component_filter,component_filter_js=return_component_filter(tab, df)
     component_filter=component_filter+"<hr/>"
 
-    #component_cy, component_cy_js=return_component_cy(dict_df=dict_df, highlight_classes=[tab], only_nodes=[tab]+return_array_related_classes(tab=tab,connections=2),height="height50")
-    component_cy, component_cy_js=return_component_cy(dict_df=dict_df, highlight_classes=[tab], only_nodes=[x for x in dict_df.keys()],height="height50")
-
 
 
     iframe=f"<iframe src='{return_string_gallery(tab)}' height='100%' width='100%'  style='margin-left=-50px !important; margin-right=-50px !important;'></iframe><hr/>"
@@ -482,12 +489,18 @@ def return_content_class(tab, df,dict_df):
     indirect_relation_label=return_component_small_header(text="2. Relation to others:")
     header=return_component_header(df,tab, dict_df, instance="")
     template_card=return_template_card()
+    # component_cy, component_cy_js=return_component_cy(dict_df=dict_df, highlight_classes=[tab], only_nodes=[tab]+return_array_related_classes(tab=tab,connections=2),height="height50")
+    related_class=return_linkable_attributes(df=df)
+    component_cy, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],
+                                                        only_nodes=related_class, height="height50")
 
-    part_direct=(return_component_spacer()+direct_relation_label+iframe)
-    part_inddirect=(return_component_spacer()+indirect_relation_label+component_cy)
+    part_direct=(return_component_spacer()+iframe)
+    part_direct = component_cy
+    part_inddirect=(return_component_spacer()+cards)
+
 
     content= header+part_direct+part_inddirect
-    return template.format(content=content  ,
+    return template.format(content=content ,
                            jsinclude=component_cy_js+component_filter_js)
 
 

@@ -72,13 +72,55 @@ function noforby(word) {
     return result;
 }
 
+//check if a given instance has its own url
+function get_instance_url(instance){
+    if( (instance =="null") || (instance  =="nan") || checkdata(instance) ==false ){
+        return "";
+    }
+
+    var result="";
+    $.each(data, function(class_tab, df) {
+        $.each(df, function(row_index, row) {// [0: [{col: data},{col: data} ]]
+            $.each(row, function(row_col, cell_data) {
+                if( (row[class_tab]==instance) &&(result=='') ){
+                    result = '../../page/'+class_tab+'/'+instance+'.html';
+                    console.log("result instance ", instance);
+                }
+            });
+        });
+
+    });
+    return result;
+}
+
+
+
+
+
 function get_all_class() {
-    result = [];
+    var result = [];
     $.each(data, function(key, value) {
         result.push(key);
     });
     return result;
 }
+
+
+function get_related_class(tab){
+var result=new Set();
+var df=data[tab];
+    $.each(df, function(row_index, row) {
+        $.each(row, function(column_name, cell_data) {
+            if(column_name.includes("For ") || column_name.includes("By ")){
+                result.add(column_name.replace("For ","").replace("By ",""));
+            }
+        });
+    });
+    console.log(Array.from(result),"what");
+return [tab].concat(Array.from(result));
+}
+
+
 
 function get_all_instance(class_tab){
 var result=[];
@@ -128,12 +170,18 @@ function get_class_columns(class_tab) {
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
 
    if(id=="cy"){
-
         var layout_style="breadthfirst";
    }else{
-
-    var layout_style="concentric";
+    var selected_layout= $("#layoutselect").val();
+    if (checkdata(selected_layout)){
+        var layout_style=selected_layout.replace(" layout", "");
+    }else{
+        console.log("selected layout is ",selected_layout);
+        var layout_style="concentric";
+    }
    }
+
+
 
 
     var cy = cytoscape({
@@ -288,6 +336,10 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 function generate_class_elements(current_class, current_instance) {
     var elements = []
     var all_class = get_all_class();
+    if (current_instance==""){
+        all_class = get_related_class(current_class);
+    }
+
 
     //calculate nodes
     $.each(all_class, function(key, val) {
@@ -309,7 +361,6 @@ function generate_class_elements(current_class, current_instance) {
 
 
     //calculate edges
-    var all_class = get_all_class();
     var alreadydone = [];
     $.each(all_class, function(key, val) { //1. for each tab
         var all_attributes_labels = get_class_columns(val); //return all attributes of that particular class /tab
@@ -647,7 +698,6 @@ function traverse_to(start_node, end_node, cy) {
 function update_select(select_id, options){
     var final_lis='';
     $.each(options, function(index, val) {
-
         if (select_id=="#filter_class"){
             var new_li = '<option value="'+val+'" >Vs '+underscore2space(val)+'</option>';
         }else{
@@ -663,32 +713,39 @@ function produce_lis(a_lis){
 var ul="";
 var lis="";
 
-$.each(a_lis, function(index, item) {
-var li="<li>"+underscore2space(item)+"</li>";
-lis=lis+li;
-});
+    $.each(a_lis, function(index, item) {
+    var li=produce_li_for_word("",item);
+    lis=lis+li;
+    });
 
 return "<ul>"+lis+"</ul>";
 }
 
 
+function produce_li_for_word(row_index,cell_data){
+    var url = get_instance_url(cell_data);
+    var dot = row_index!="" ? ": ": "";
+    if (url !=''){
+        var li="<li>"+row_index+dot+"<a href='"+url+"'>"+underscore2space(cell_data)+"</a></li>";
+    }else{
+        var li="<li>"+row_index+dot+""+underscore2space(cell_data)+"</li>";
+    }
+    return li;
+}
+
 function display_instance_attribute_aslist(instance,instance_class){
 var df=data[instance_class];
 var lis="";
-
     $.each(df, function(df_index, row) {
         if(row[instance_class]==instance){
             $.each(row, function(row_index, cell_data) {
-                if (typeof(cell_data)!="string"){
-                    var li="<li>"+row_index+": "+underscore2space(cell_data)+"</li>";
-                    lis=lis+li;
-
-                }else if (cell_data.includes(",")){
-                    var li="<li>"+row_index+": "+produce_lis(cell_data.split(","))+"</li>";
-                    lis=lis+li;
-                }else{
-                    var li="<li>"+row_index+": "+underscore2space(cell_data)+"</li>";
-                    lis=lis+li;
+                var result_display;// result can belink, can be <a></a>
+                if (typeof(cell_data)!="string"){// not string at all
+                    lis=lis+produce_li_for_word(row_index, cell_data);
+                }else if (cell_data.includes(",")){//string with multiple items
+                    lis=lis+"<li>"+row_index+": "+produce_lis(cell_data.split(","))+"</li>";
+                }else{//string but with only one item
+                    lis=lis+produce_li_for_word(row_index,cell_data);
                 }
 
             });
@@ -701,7 +758,7 @@ return ul ;
 }
 
 function get_layout_options(){
-var result=["cose", "random", "concentric","grid","circle", "breadthfirst"];
+var result=["cose layout", "random layout", "concentric layout","grid layout","circle layout", "breadthfirst layout"];
 return result;
 }
 
@@ -716,7 +773,7 @@ $(document).ready(function() {
     $('#layoutselect').change(function(){
         var selected_layout = $('#layoutselect').val();
         var layout = dict_cy["cy2"].layout({
-            name: selected_layout
+            name: selected_layout.replace(" layout", "")
         });
 
         layout.run();
