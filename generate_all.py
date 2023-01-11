@@ -390,8 +390,8 @@ def return_content_instance(instance, row, tab, dict_df):
     direct_part_left=("<div class='width100'>"+spacer+ label_direct_attribute+ ul+ "</div>")
     direct_part_right=("<div class='width100'>"+spacer+ label_direct_compare+ "</div>")
     direct_part=grid.format(direct_part_left,direct_part_right)
-    indirect_part= spacer+ label_indirect_attribute+ explainer + cy1+cy2
-    indirect_part= grid.format(spacer+ label_indirect_attribute+ explainer, spacer+ label_indirect_attribute2+ layout_select)+ cy1+cy2
+    indirect_part= spacer+ spacer+label_indirect_attribute+ explainer + cy1+cy2
+    indirect_part= grid.format(spacer+ spacer+label_indirect_attribute+ explainer, spacer+ label_indirect_attribute2+ layout_select)+ cy1+cy2
 
     content=header + direct_part + indirect_part
     return template.format(content=content, jsinclude=component_cy_js)
@@ -435,7 +435,7 @@ def return_component_header(df,tab, dict_df, instance):
         h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} "></i></a>'
     else:
         h1_icon=f'<i class="fa-solid {return_string_icon(tab)} "></i>'
-    edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-expand"></i></a>'
+    edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-edit"></i></a>'
     other_classes=""
     if instance:
         explainer=f''
@@ -461,7 +461,7 @@ def return_content_class(tab, df,dict_df):
     for (fakekey, row),key in zip(df.iterrows(),df[tab]):
         if pd.isna(key) or key is None:
             continue
-        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-5 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
+        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-1 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
         cardmiddle=""
         for row_key, row_item in row.items():
             if row_key!=tab:
@@ -496,7 +496,7 @@ def return_content_class(tab, df,dict_df):
 
     part_direct=(return_component_spacer()+iframe)
     part_direct = component_cy
-    part_inddirect=(return_component_spacer()+cards)
+    part_inddirect=(return_component_spacer()+cards+return_component_spacer())
 
 
     content= header+part_direct+part_inddirect

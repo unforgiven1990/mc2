@@ -196,13 +196,12 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
                     'background-color': "#999",
                     'shape': 'round-rectangle',
                     'label': 'data(label)',
-                    'width': '90px',
-                    'height': '50px',
-                    'color': '#fff',
+                    'width': '20px',
+                    'height': '20px',
+                    'color': '#000',
                     'text-halign': 'center',
-                    'text-valign': 'center',
                     'text-wrap': 'wrap',
-                    'text-max-width': "5px",
+                    'text-max-width': "150px",
                     'text-overflow-wrap': "whitespace",
                 }
             },
@@ -258,8 +257,10 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             name: layout_style,
             spacingFactor: 0.85,
             avoidOverlap: true,
+            padding: 30,
             animate: true,
             animationDuration: 1000,
+            nodeDimensionsIncludeLabels: true,
         },
         ready: function() {
 
@@ -344,7 +345,7 @@ function generate_class_elements(current_class, current_instance) {
     //calculate nodes
     $.each(all_class, function(key, val) {
         if (current_class == val && checkdata(current_instance)) {
-            var label = underscore2space(current_instance) + " (" + underscore2space(val) + ")";
+            var label =  underscore2space(val)+ " = "+ underscore2space(current_instance)   ;
         } else {
             var label = underscore2space(val);
         }
@@ -433,7 +434,7 @@ function generate_instance_elements(current_class, target_class) {
     found_instance_node_list.push({
         data: {
             'id': source_instance,
-            'label': underscore2space(source_instance) + " (" + underscore2space(page_class) + ")",
+            'label': underscore2space(page_class)+" = "+underscore2space(source_instance),
             'href': "../../page/" + source_instance + "/" + source_instance + ".html"
         }
     });
@@ -758,7 +759,7 @@ return ul ;
 }
 
 function get_layout_options(){
-var result=["cose layout", "random layout", "concentric layout","grid layout","circle layout", "breadthfirst layout"];
+var result=["breadthfirst layout", "cose layout",  "concentric layout","grid layout","circle layout"];
 return result;
 }
 
