@@ -330,57 +330,66 @@ def return_global_html():
     template = head+body+bottomspacer
 
 
-
-
-def return_content_instance(instance, row, tab, dict_df):
-
+def return_component_direct_relations(instance, row, tab, dict_df):
     ul="<ul>{}</ul>"
-    lis=""
-    real_instance=instance
+    lis = ""
+
     for instance, val in row.items():
         if "For" in instance or "By" in instance:
-            for_what=instance.replace("For ", "").replace("By ", "")
+            for_what = instance.replace("For ", "").replace("By ", "")
             if pd.isna(val):
                 continue
             if "," not in val:
-                lis = lis + f"<li>{instance}: <a href='../{for_what}/{space_replacer(val)}.html'>{val.replace('_',' ')}</a></li>"
+                lis = lis + f"<li>{instance}: <a href='../{for_what}/{space_replacer(val)}.html'>{val.replace('_', ' ')}</a></li>"
             else:
                 ul2 = "<ul>{}</ul>"
                 lis2 = ""
                 for val_item in val.split(","):
-                    lis2=lis2+f"<li><a href='../{for_what}/{space_replacer(val_item)}.html'>{val_item.replace('_',' ')}</a></li>"
+                    lis2 = lis2 + f"<li><a href='../{for_what}/{space_replacer(val_item)}.html'>{val_item.replace('_', ' ')}</a></li>"
                 lis = lis + f"<li>{instance}: {ul2.format(lis2)}</li>"
         else:
-            lis=lis+f"<li>{instance}: {val}</li>"
+            lis = lis + f"<li>{instance}: {val}</li>"
+    return ul.format(lis)
 
 
-    component_cy, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50")
+
+def return_content_instance(instance, row, tab, dict_df):
+    real_instance = instance
+    ul=return_component_direct_relations(instance, row, tab, dict_df)
+
+    cy1, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50 width50")
     label_direct_attribute=return_component_small_header("1. Direct Relations")
-    label_direct_compare=return_component_small_header("Compare to", component_inside="<button type='button' class='btn btn-primary'>Select</button>")
+
+    button1=return_template_dropdown(id="filter_class",text="Class")
+    button2=return_template_dropdown(id="filter_instance",text="Instance")
+
+    label_direct_compare="<div class='row' >"+button1+button2 + "</div><div id='versus'></div>"
     label_indirect_attribute=return_component_small_header("2. Indirect Relations")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
     spacer= return_component_spacer()
     template_card=return_template_card()
-    indirect_chart=return_indirect_chart()
-    explainer=f'<p class="fs-1 pb-1 text-secondary"><ul><b>How to use:</b><li><b>Left Click</b>: See indirect relations from {tab} : {real_instance} to the selection.</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul></p>'
+    cy2=return_indirect_chart()
+    layout_select="<select id='layoutselect'><option></option></select>"
+    explainer=f'<p class="fs-1 pb-1 text-secondary"><ul><b>How to use:</b><li><b>Left Click</b>: See indirect relations from {tab} : {real_instance} to the selection.</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul></p>'+layout_select
+
 
     grid="""
     <div class="container">
   <div class="row">
-  <div class="col">
+  <div class="col-6">
       {}
     </div>
-    <div class="col">
+    <div class="col-6">
       {}
         </div>
     </div>
     </div><hr/>
     """
 
-    direct_part_left=(spacer+ label_direct_attribute+ ul.format(lis))
-    direct_part_right=(spacer+ label_direct_compare+ "<p>Selected compare to data = todo </p>")
+    direct_part_left=("<div class='width100'>"+spacer+ label_direct_attribute+ ul+ "</div>")
+    direct_part_right=("<div class='width100'>"+spacer+ label_direct_compare+ "</div>")
     direct_part=grid.format(direct_part_left,direct_part_right)
-    indirect_part= spacer+ label_indirect_attribute+ explainer+ component_cy +indirect_chart
+    indirect_part= spacer+ label_indirect_attribute+ explainer + cy1+cy2
 
     content=header + direct_part + indirect_part
     return template.format(content=content, jsinclude=component_cy_js)
@@ -401,7 +410,7 @@ def return_component_spacer():
     return result
 
 def return_indirect_chart():
-    return f"<div id='cy2' class='border border-secondary border-5 rounded mb-3 height100'></div>"
+    return f"<div id='cy2' class='border border-secondary border-5 rounded mb-3 height50 width50'></div>"
 
 def return_component_small_header(text="",component_inside=''):
     return f'<h4>{text}{component_inside}</h4>'
@@ -421,9 +430,9 @@ def return_component_header(df,tab, dict_df, instance):
         classcount=""
 
     if instance:
-        h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} fa-xl"></i></a>'
+        h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} "></i></a>'
     else:
-        h1_icon=f'<i class="fa-solid {return_string_icon(tab)} fa-xl"></i>'
+        h1_icon=f'<i class="fa-solid {return_string_icon(tab)} "></i>'
     edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-expand"></i></a>'
     other_classes=""
     if instance:
@@ -431,7 +440,7 @@ def return_component_header(df,tab, dict_df, instance):
     else:
         explainer = f'<p class="fs-1 pb-1 text-secondary">{return_string_component(tab)}</p>'
 
-    header_text= f'<a class="text-muted">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab
+    header_text= f'<a class="text-muted">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
     h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
 
     return h1+"<hr/>"
@@ -532,6 +541,8 @@ def return_component_filter(tab, df):
 
     return [template_filter.format(items),js_part]
 
+def return_template_dropdown(id, text ):
+    return """<select class="form-select" id='"""+id+"""'></select>"""
 
 
 def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], height="height100", add_instance_label=""):

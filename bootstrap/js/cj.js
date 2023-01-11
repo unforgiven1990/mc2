@@ -19,11 +19,19 @@ function get_page_class() {
 }
 
 function space2underscore(word) {
-    return word.replaceAll(" ", "_")
+    if (typeof(word)=="string"){
+        return word.replaceAll(" ", "_");
+    }else{
+        return word;
+    }
 }
 
 function underscore2space(word) {
-    return word.replaceAll("_", " ")
+    if (typeof(word)=="string"){
+        return word.replaceAll("_", " ");
+    }else{
+        return word;
+    }
 }
 
 function checkdata(value) {
@@ -68,6 +76,15 @@ function get_all_class() {
     result = [];
     $.each(data, function(key, value) {
         result.push(key);
+    });
+    return result;
+}
+
+function get_all_instance(class_tab){
+var result=[];
+var df=data[class_tab];
+    $.each(df, function(key, row) {
+        result.push(row[class_tab]);
     });
     return result;
 }
@@ -203,7 +220,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 
 
     //initialization
-    cy.$('#' + page_class).addClass('bigger');//make instance node look bigger
+    //cy.$('#' + page_class).addClass('bigger');//make instance node look bigger
     cy.$('#' + page_class).addClass('red'); // make instance node blue
     cy.$('#' + page_instance).addClass('red');
 
@@ -627,13 +644,105 @@ function traverse_to(start_node, end_node, cy) {
 
 
 
+function update_select(select_id, options){
+    var final_lis='';
+    $.each(options, function(index, val) {
+
+        if (select_id=="#filter_class"){
+            var new_li = '<option value="'+val+'" >Vs '+underscore2space(val)+'</option>';
+        }else{
+            var new_li = '<option value="'+val+'" >'+underscore2space(val)+'</option>';
+        }
+
+        final_lis=final_lis+new_li;
+    });
+    $(select_id).html(final_lis);
+}
+
+function produce_lis(a_lis){
+var ul="";
+var lis="";
+
+$.each(a_lis, function(index, item) {
+var li="<li>"+underscore2space(item)+"</li>";
+lis=lis+li;
+});
+
+return "<ul>"+lis+"</ul>";
+}
 
 
+function display_instance_attribute_aslist(instance,instance_class){
+var df=data[instance_class];
+var lis="";
+
+    $.each(df, function(df_index, row) {
+        if(row[instance_class]==instance){
+            $.each(row, function(row_index, cell_data) {
+                if (typeof(cell_data)!="string"){
+                    var li="<li>"+row_index+": "+underscore2space(cell_data)+"</li>";
+                    lis=lis+li;
+
+                }else if (cell_data.includes(",")){
+                    var li="<li>"+row_index+": "+produce_lis(cell_data.split(","))+"</li>";
+                    lis=lis+li;
+                }else{
+                    var li="<li>"+row_index+": "+underscore2space(cell_data)+"</li>";
+                    lis=lis+li;
+                }
+
+            });
+        }
+    });
+
+    var ul="<ul>"+lis+"</ul>";
+
+return ul ;
+}
+
+function get_layout_options(){
+var result=["cose", "random", "concentric","grid","circle", "breadthfirst"];
+return result;
+}
 
 
 $(document).ready(function() {
     page_class = get_page_class();
     page_instance = get_page_instance();
+    //initialization filter class and instance to allow dropdown to be selected
+    //get all vailable tabs
+    update_select("#filter_class",get_all_class());
+    update_select("#layoutselect", get_layout_options());
+    $('#layoutselect').change(function(){
+        var selected_layout = $('#layoutselect').val();
+        var layout = dict_cy["cy2"].layout({
+            name: selected_layout
+        });
+
+        layout.run();
+    });
+
+    $('#filter_class').change(function(){
+        var all_instances=get_all_instance($("#filter_class").find(":selected").val());
+        var selected_class = $('#filter_class').val();
+        $("#versus").empty();
+        update_select("#filter_instance",["Specify "+selected_class].concat(all_instances));
+    });
+    //select the current class
+    $('#filter_class').val(page_class).change();
+
+     $('#filter_instance').change(function(){
+        var selected_instance = $('#filter_instance').val();
+        var selected_class = $('#filter_class').val();
+        var ul= display_instance_attribute_aslist(instance=selected_instance,instance_class=selected_class);
+        $('#versus').html(ul);
+    });
+
+
+    //$('#filter_instance').addClass('blue');
+
+
+
 
     if (page_class == "index") { //index page
         cy = create_cy(id = "cy", current_class = '', current_instance = '', elements = generate_class_elements(page_class, page_instance));
