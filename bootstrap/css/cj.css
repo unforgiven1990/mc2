@@ -8,36 +8,64 @@ ul {
     padding-left: 1.25rem; /* To remove default left padding */
 }
 
-#cy{
-  width: 100%;
-  display: block;
-  align:center;
+.mycard{
 }
 
+.container > #cy{
+  width: 100% !important;
+}
+
+#cy, #cy2{
+  width: 50% !important;
+  height: 70% !important;
+  display: block;
+  align:center;
+  background-color:white;
+  /*  border: 1px solid rgba(0, 0, 0, 0.125); */
+}
+
+
+#cy3{
+  height: 100% !important;
+  margin:0x;
+  width: 100% !important;
+}
+
+
+
+.card-header {
+    padding: 0.50rem 1rem;
+    margin-bottom: 0;
+    background-color: rgb(240 240 240 / 0%);
+    border-bottom: 1px solid rgb(0 0 0  / 10%);
+}
+
+.card {
+    border: 0px solid rgb(255 255 255 / 13%);
+}
+
+
+
+
 .height100{
-  height: 100%;
+  height: 100% !important;
 }
 
 .width100{
-width: 100%;
+width: 100% !important;
 }
 
 .width50{
-width: 49% !important;
+width: 50% !important;
 float:left;
 }
 
 
 .height50{
-  height: 80%;
-  margin:2px;
+  height: 80%!important;
+  margin:opx;
 }
 
-#cy3{
-  height: 100%;
-  margin:0x;
-  width: 99% !important;
-}
 
 select{
 width:50% !important;
@@ -62,6 +90,42 @@ width:50% !important;
     margin:0px !important;
   }
 
+
+
+
+.col-6{
+padding-right: 3px;
+padding-left: 3px;
+}
+
+.container.mycontainer{
+padding:0px !important;
+}
+
+
+body{
+background-color:#f8f8f8;
+font-size:0.9rem;
+}
+
+h4{
+margin-bottom: 0rem;
+}
+
+
+.card{
+shadow-sm
+}
+
+.row{
+margin-left:0px;
+margin-right:0px;
+}
+
+
+#instance_img{
+width:100%;
+}
 
 input[type=checkbox]
 {

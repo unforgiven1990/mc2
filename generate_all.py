@@ -100,7 +100,7 @@ def cleanup(dict_df):
     forbidden_chars={"@nio.com":'',
                      "@nio.io":'',
                      ",":'',
-                     ".":'',
+                     ".":'_',
                      "/":'',
                      ":":'',
                      " ":'_', #still empty space in tab data not converted
@@ -352,6 +352,66 @@ def return_component_direct_relations(instance, row, tab, dict_df):
     return ul.format(lis)
 
 
+def return_bool_instance_attachment(instance):
+    instance_with_space=instance.replace("_"," ")
+    for file_path in glob.glob("attachments/*.jpg"):
+        file_name=os.path.basename(file_path).replace(".jpg","").replace("_Process Flow","")
+        if file_name == instance_with_space:
+            return True
+    return False
+
+
+def return_leftvsright():
+    return """ <div class="">
+      <div class="row">
+      <div class="col-6" style="border-right: 1px solid #ddd;">
+          {}
+        </div>
+        <div class="col-6">
+          {}
+            </div>
+        </div>
+        </div>"""
+
+
+def return_grid1():#left vs right for poor people
+    return """ <div class="mycard">
+                  <div class="myleft">
+                    {}
+                  </div>
+                  <div class="myright">
+                    {}
+                  </div>
+                </div>
+                """
+
+def return_grid2():
+    return """ <div class="card">
+                  <div class="card-header">
+                    {}
+                  </div>
+                  <div class="card-body mb-3">
+                    {}
+                  </div>
+                </div>
+                """
+
+
+
+
+
+def return_grid3():
+    return  """
+                <div class="card">
+                  <div class="card-header">
+                    {}
+                  </div>
+                </div>
+                """
+
+
+
+
 
 def return_content_instance(instance, row, tab, dict_df):
     real_instance = instance
@@ -367,6 +427,7 @@ def return_content_instance(instance, row, tab, dict_df):
     label_indirect_attribute=return_component_small_header("2. Indirect Relations")
     label_indirect_attribute2=return_component_small_header("Result")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
+
     spacer= return_component_spacer()
     template_card=return_template_card()
     cy2=return_indirect_chart()
@@ -374,8 +435,6 @@ def return_content_instance(instance, row, tab, dict_df):
     fullscreen_button='<button class="btn btn-primary ml-1" id="fullscreen_button"> <i class="fa fa-expand"></i></button>'
     explainer=f'<ul><li><b>Left Click</b>: See indirect relations from {real_instance.replace("_"," ")}</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul>'
     modal="""
-    
-
 <div id="modal" class="modal modal-fullscreen-xl" id="modal-fullscreen-xl" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -384,36 +443,25 @@ def return_content_instance(instance, row, tab, dict_df):
         <div id='cy3' class=''></div>
       </div>
       <div class="modal-footer">
-        <button id="modal_close" type="button" class="btn btn-primary" data-dismiss="modal" data-bs-dismiss="modal" >Close</button>
-  
+        <button id="modal_close" type="button" class="btn btn-primary" data-dismiss="modal" data-bs-dismiss="modal" >Close</button>  
       </div>
     </div>
   </div>
 </div>
     """
 
+    direct_part_left=("<div class='width100'>"+ ul+ "</div>")
+    direct_part_right=("<div class='width100'>"+ label_direct_compare+ "</div>")
+
+    grid2=return_grid2()
+    leftrightgrid=return_leftvsright()
+    instance_has_image=return_bool_instance_attachment(instance)
+    process_image=f'<img id="instance_img" src="../../attachments/{instance.replace("_"," ")}_Process Flow.jpg" alt="{instance} Attached Image from Bitable">'+spacer if instance_has_image else ""
+    direct_part=process_image+ grid2.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
+    indirect_part= grid2.format(label_indirect_attribute, leftrightgrid.format(explainer, layout_select+fullscreen_button+modal) ) +  return_grid1().format(cy1,cy2)
 
 
-    grid="""
-    <div class="container">
-  <div class="row">
-  <div class="col-6">
-      {}
-    </div>
-    <div class="col-6">
-      {}
-        </div>
-    </div>
-    </div>
-    """
-
-    direct_part_left=("<div class='width100'>"+spacer+ label_direct_attribute+ ul+ "</div>")
-    direct_part_right=("<div class='width100'>"+spacer+ label_direct_compare+ "</div>")
-    direct_part=grid.format(direct_part_left,direct_part_right)
-    indirect_part= spacer+ spacer+label_indirect_attribute+ explainer + cy1+cy2
-    indirect_part= grid.format(spacer+ spacer+label_indirect_attribute+ explainer, spacer+ label_indirect_attribute2 + layout_select + fullscreen_button + modal)+ cy1+cy2
-
-    content=header + direct_part + indirect_part
+    content=header + spacer+direct_part + spacer+indirect_part+ spacer
     return template.format(content=content, jsinclude=component_cy_js)
 
 
@@ -428,11 +476,11 @@ def return_template_card():
     return result
 
 def return_component_spacer():
-    result = '<p class="mt-5"></p>'
+    result = '<p class="mt-0" style="margin-bottom:0.5rem;"></p>'
     return result
 
 def return_indirect_chart():
-    return f"<div id='cy2' class='border border-secondary border-5 rounded mb-3 height50 width50'></div>"
+    return f"<div id='cy2' class=' mb-3 height50 width50'></div>"
 
 def return_component_small_header(text="",component_inside=''):
     return f'<h4>{text}{component_inside}</h4>'
@@ -460,12 +508,14 @@ def return_component_header(df,tab, dict_df, instance):
     if instance:
         explainer=f''
     else:
-        explainer = f'<p class="fs-1 pb-1 text-secondary">{return_string_component(tab)}</p>'
+        explainer = f'<p class="fs-1 text-secondary">{return_string_component(tab)}</p>'
 
     header_text= f'<a class="text-muted">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
-    h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
+    h1 = f'<h2 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
 
-    return h1+"<hr/>"
+    grid3=return_grid3()
+    h1=grid3.format(h1)
+    return return_component_spacer()+h1
 
 
 def return_linkable_attributes(df):
@@ -515,11 +565,14 @@ def return_content_class(tab, df,dict_df):
                                                         only_nodes=related_class, height="height50")
 
     part_direct=(return_component_spacer()+iframe)
-    part_direct = component_cy
-    part_inddirect=(return_component_spacer()+cards+return_component_spacer())
+    spacer=return_component_spacer()
+    grid2=return_grid2()
+    grid3=return_grid3()
+    part_direct = grid3.format(return_component_small_header("1. Class Overview"),"")+component_cy
+    part_inddirect=grid2.format(return_component_small_header("2. Instances"), cards)
 
 
-    content= header+part_direct+part_inddirect
+    content= header+spacer+part_direct+spacer+part_inddirect+spacer
     return template.format(content=content ,
                            jsinclude=component_cy_js+component_filter_js)
 
@@ -580,7 +633,7 @@ def return_template_dropdown(id, text ):
 
 def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], height="height100", add_instance_label=""):
     """cy=cytoscape.js"""
-    cy = f"<div id='cy' class='border border-secondary border-5 rounded mb-3 {height}'></div>"
+    cy = f"<div id='cy' class=' mb-3 {height}'></div>"
 
     js_partstart = """
     $(document).ready(function () {
