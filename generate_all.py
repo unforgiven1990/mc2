@@ -363,6 +363,13 @@ def return_component_direct_relations(instance, row, tab, dict_df):
     lis = ""
 
     for instance, val in row.items():
+        if instance=="MC2 Link":
+            continue
+
+        if not val:
+            continue
+
+
         instance_label = instance.replace("_", " ")
         if "For" in instance or "By" in instance:
             for_what = instance.replace("For ", "").replace("By ", "")
@@ -417,7 +424,7 @@ def return_grid1():#left vs right for poor people
 def return_grid2():
     return """ <div class="card">
                   <div class="card-header">
-                    <h4>Overview</h4>
+                    
                     {}
                   </div>
                   <div class="card-body mb-3">
