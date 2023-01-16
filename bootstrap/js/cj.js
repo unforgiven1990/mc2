@@ -67,8 +67,7 @@ function checkdata(value) {
 //general replace pandas function
 
 function noforby(word) {
-    var result = word.replaceAll("For ", "");
-    result = result.replaceAll("By ", "");
+    var result = word.replaceAll("For ", "").replaceAll("By ", "");
     return result;
 }
 
@@ -131,9 +130,12 @@ var df=data[class_tab];
     return result;
 }
 
+
+//col is written without For By
 function get_cell(df, index, col, tab) {
     var result;
     $.each(df, function(index_as_number, row) { //traversing through the rows of a df
+
         $.each(row, function(column, cell_data) { //traversing in 1 row, through the columns
             if (noforby(column) == col) { // we found the column. column matches
                 if (index == row[tab]) { //index matches
@@ -169,6 +171,8 @@ function get_class_columns(class_tab) {
 
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
 
+
+
    if(id=="cy"){
         var layout_style="breadthfirst";
    }else{
@@ -181,6 +185,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     }
    }
 
+//cytoscapeCola(cytoscape);
 
 
 
@@ -255,11 +260,10 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 
         layout: {
             name: layout_style,
-            spacingFactor: 0.85,
+            spacingFactor: 0.95,
             avoidOverlap: true,
             padding: 30,
             animate: true,
-            animationDuration: 1000,
             nodeDimensionsIncludeLabels: true,
         },
         ready: function() {
@@ -765,9 +769,152 @@ return result;
 }
 
 
+
+
+function update_nav(){
+
+}
+
+
+
+
+
+
+
+
+
+//only used for user journey page
+ window.addEventListener('DOMContentLoaded', function(){
+	const observer = new IntersectionObserver(function(entries) {
+		entries.forEach(function(entry) {
+			const id = entry.target.getAttribute('id');
+			if (entry.intersectionRatio > 0) {
+			    document.querySelector(`nav li a[href="#${id}"]`).parentElement.classList.add('active');
+			} else {
+				document.querySelector(`nav li a[href="#${id}"]`).parentElement.classList.remove('active');
+			}
+		});
+	});
+
+	// Track all sections that have an `id` applied
+	document.querySelectorAll('section[id]').forEach(function(section)  {
+		observer.observe(section);
+	});
+});
+
+
+
+
+
+     /*  add speechify for wiki
+    import(
+      "https://storage.googleapis.com/speechify-api-cdn/speechifyapi.min.mjs"
+    ).then(async (speechifyWidget) => {
+      // this parent element for your article or listenable content
+      const articleRootElement = document.querySelector("#speechify_content");
+      // this is the header of your article; the inline player will be placed under this heading
+      const articleHeading = articleRootElement.querySelector("h2");
+
+      const widget = speechifyWidget.makeSpeechifyExperience({
+        rootElement: articleRootElement,
+        inlinePlayerElement: articleHeading,
+      });
+      await widget.mount();
+    });
+*/
+
+
+function update_select_country(){
+var options='';//list of all available countries
+var countries=get_all_instance("Country");
+$.each(countries, function(row_index, country) {
+options=options+'<option value="'+country+'" >'+country+'</option>'
+});
+ $("#select_country").html(options);
+}
+
+
+function update_select_business(){
+var options='';//list of all available countries
+var businesses=get_all_instance("Business_Model");
+
+$.each(businesses, function(row_index, business) {
+
+options=options+'<option value="'+business+'" >'+business+'</option>'
+});
+ $("#select_business").html(options);
+
+
+
+ //select the one of the current page
+ var selected_bm= $("#main").data("forjourney");
+ $("#select_business").val(selected_bm);
+
+
+
+
+
+}
+
+
+function update_select_perspective(){
+ $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Employee_Journey">Employee Perspective</option>');
+
+ var selected_persp= $("#main").data("forperspective");
+ $("#select_perspective").val(selected_persp);
+
+}
+
+
+function update_bm_options(){
+var selected_country=$('#select_country').val();
+
+//provide only business model denmark can select
+df_country=data["Country"];
+var allowed_bm=get_cell(df=df_country, index=selected_country, col="Business_Model", tab="Country");
+var new_options="";
+
+$.each(allowed_bm.split(","), function(index, val) {
+    new_options=new_options+"<option value='"+val+"'>"+val+"</option>"
+});
+
+$("#select_business").html(new_options);
+}
+
+
+function jump_to_journey(){
+    var selected_bm=$('#select_business').val();
+    var selected_perspective=$('#select_perspective').val();
+
+    var url = "../"+selected_perspective+"/"+selected_perspective+"_"+selected_bm+".html";
+    $(location).attr('href',url);
+}
+
+
+
 $(document).ready(function() {
+
     page_class = get_page_class();
     page_instance = get_page_instance();
+
+
+    //calibrate for user journey page
+    update_select_country();
+    update_select_business();
+    update_select_perspective();
+
+
+    $('#select_country').change(function(){
+        update_bm_options();
+    });
+
+
+    $('#select_business, #select_perspective').change(function(){
+        jump_to_journey();
+    });
+
+
+
     //initialization filter class and instance to allow dropdown to be selected
     //get all vailable tabs
     update_select("#filter_class",get_all_class());
@@ -816,7 +963,9 @@ $(document).ready(function() {
     });
 
 
-    //$('#filter_instance').addClass('blue');
+
+
+
 
 
 
@@ -829,9 +978,28 @@ $(document).ready(function() {
         cy = create_cy(id = "cy", current_class = page_class, current_instance = page_instance, elements = generate_class_elements(page_class, page_instance));
 
     } else if (page_class != "" && page_instance == "") { // class page
-        cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
+
+        if ($("#cy").length > 0){
+            cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
+
+          }
+
 
     }
+
+
+
+    //only for user journey
+    $(window).on('scroll', () => {
+      // after scroll is finished, we can update li
+      update_nav();
+    })
+
+
+
+
+
+
 
 });
 

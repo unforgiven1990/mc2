@@ -101,6 +101,7 @@ def cleanup(dict_df):
                      "@nio.io":'',
                      ",":'',
                      ".":'_',
+                     '"':'',
                      "/":'',
                      ":":'',
                      " ":'_', #still empty space in tab data not converted
@@ -218,8 +219,8 @@ def return_string_component(word):
         "City":"The location view shows what infrastructure is there and which employee is here.",
         "Car":"What model exists for different country and business model",
         "Business_Model":"The location view shows what form of ownership user can have.",
-        "User_Journey":"Different types of user journey for different business model",
-        "Employee_Journey":"How NIO prepares for the user journey",
+        "User_Journey": f"<select id='select_business'></select><select id='select_perspective'></select>",
+        "Employee_Journey":"<select id='select_business'></select><select id='select_perspective'></select>",
         "Country":"Markets where NIO sells car",
         "Others":"sad",
     }
@@ -263,7 +264,7 @@ def return_global_navbar():
     dict_nav = {
         "People": [  "Role", "Employee","Department"],
         "Strategy": ["Strategy", "Capability", "Business_Model"],
-        "Process": ["User_Process", "Employee_Process",  "User_Journey", "Employee_Journey", "KPI"],
+        "Process": ["User_Journey","User_Process", "Employee_Journey","Employee_Process",    "KPI"],
         "Others": ["System", "City", "Country", "Car"],
     }
 
@@ -303,8 +304,37 @@ def return_global_html():
 
 
     #create edgematrix
+    test="""
 
+    
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    
+    
+   <!-- Cytoscape extention -->
+		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
 
+		<!-- Jquery for graphml -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+		<!-- Other iVis-at-Bilkent libraries -->
+		<script src="https://unpkg.com/layout-base@1.0.2/layout-base.js"></script>
+		<script src="https://unpkg.com/avsdf-base/avsdf-base.js"></script>
+		<script src="https://unpkg.com/cose-base@1.0.3/cose-base.js"></script>
+		<script src="https://unpkg.com/cytoscape-graphml/cytoscape-graphml.js"></script>
+
+		<!-- CiSE Bundle -->
+		<script src="../../bootstrap/extensions/cytoscape-cise.js"></script>
+    
+    
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/webcola/WebCola/cola.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-cola@2.4.0/cytoscape-cola.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.js"></script>
+    
+    """
+
+    meta='<meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1">'
     js_jquery = '<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>'
     js_popperjs = '<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>'
     js_bootstrap = '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>'
@@ -314,17 +344,15 @@ def return_global_html():
     js_data = '<script  src="../../bootstrap/js/data.js"  ></script>'
 
     css_fa = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">'
-    css_bootstrap = '<link href="../../bootstrap/css/bootstrap.css" rel="stylesheet">'
+    css_bootstrap = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">'
     css_cj = '<link href="../../bootstrap/css/cj.css" rel="stylesheet">'
 
     favicon='<link rel="icon" href="../../img/nio.ico">'
 
-    head = '<head>{}</head>'.format(css_fa +css_bootstrap + css_cj+favicon)
-    body = "<body>"+global_navbar +"<div class='container'>{content}</div> "+js_jquery + js_popperjs + js_bootstrap + js_fa+js_cytoscape+"{jsinclude}"+js_cj+js_data+"</body>"
-    bottomspacer='<div class="p-5 m-5"></div>'
-    footer='<footer class="py-0 my-0 fixed-bottom"><p class="text-center text-muted px-3" style="float:right;">&copy; 2023 made by CJ</p></footer>'
-
-
+    head = '<head data-bs-spy="scroll" data-bs-target="#navbar-example" >{}</head>'.format(css_fa +css_bootstrap + css_cj+favicon)
+    body = "<body>"+global_navbar +"<div class='container'>{content}</div> "+meta+ js_jquery + js_popperjs + js_bootstrap + js_fa+js_cytoscape+"{jsinclude}"+js_cj+js_data+"</body>"
+    bottomspacer='<div class="p-2 m-2"></div>'
+    footer='<footer class="py-0 my-0 fixed-bottom"><p class="text-center text-disable px-3" style="float:right;">&copy; 2023 made by CJ</p></footer>'
 
     global template
     template = head+body+bottomspacer
@@ -335,20 +363,21 @@ def return_component_direct_relations(instance, row, tab, dict_df):
     lis = ""
 
     for instance, val in row.items():
+        instance_label = instance.replace("_", " ")
         if "For" in instance or "By" in instance:
             for_what = instance.replace("For ", "").replace("By ", "")
             if pd.isna(val):
                 continue
             if "," not in val:
-                lis = lis + f"<li>{instance}: <a href='../{for_what}/{space_replacer(val)}.html'>{val.replace('_', ' ')}</a></li>"
+                lis = lis + f"<li>{instance_label}: <a href='../{for_what}/{space_replacer(val)}.html'>{val.replace('_', ' ')}</a></li>"
             else:
                 ul2 = "<ul>{}</ul>"
                 lis2 = ""
                 for val_item in val.split(","):
                     lis2 = lis2 + f"<li><a href='../{for_what}/{space_replacer(val_item)}.html'>{val_item.replace('_', ' ')}</a></li>"
-                lis = lis + f"<li>{instance}: {ul2.format(lis2)}</li>"
+                lis = lis + f"<li>{instance_label}: {ul2.format(lis2)}</li>"
         else:
-            lis = lis + f"<li>{instance}: {val}</li>"
+            lis = lis + f"<li>{instance_label}: {val}</li>"
     return ul.format(lis)
 
 
@@ -364,7 +393,7 @@ def return_bool_instance_attachment(instance):
 def return_leftvsright():
     return """ <div class="">
       <div class="row">
-      <div class="col-6" style="border-right: 1px solid #ddd;">
+      <div class="col-6" style="border-right: 1px solid #eee;">
           {}
         </div>
         <div class="col-6">
@@ -388,6 +417,7 @@ def return_grid1():#left vs right for poor people
 def return_grid2():
     return """ <div class="card">
                   <div class="card-header">
+                    <h4>Overview</h4>
                     {}
                   </div>
                   <div class="card-body mb-3">
@@ -402,7 +432,7 @@ def return_grid2():
 
 def return_grid3():
     return  """
-                <div class="card">
+                <div class="card" style="position: sticky; top: 0;">
                   <div class="card-header">
                     {}
                   </div>
@@ -456,7 +486,7 @@ def return_content_instance(instance, row, tab, dict_df):
     grid2=return_grid2()
     leftrightgrid=return_leftvsright()
     instance_has_image=return_bool_instance_attachment(instance)
-    process_image=f'<img id="instance_img" src="../../attachments/{instance.replace("_"," ")}_Process Flow.jpg" alt="{instance} Attached Image from Bitable">'+spacer if instance_has_image else ""
+    process_image=f'<img id="instance_img" src="../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow.jpg" alt="{instance} Attached Image from Bitable">'+spacer if instance_has_image else ""
     direct_part=process_image+ grid2.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
     indirect_part= grid2.format(label_indirect_attribute, leftrightgrid.format(explainer, layout_select+fullscreen_button+modal) ) +  return_grid1().format(cy1,cy2)
 
@@ -475,8 +505,8 @@ def return_template_card():
     """
     return result
 
-def return_component_spacer():
-    result = '<p class="mt-0" style="margin-bottom:0.5rem;"></p>'
+def return_component_spacer(default=0):
+    result = f'<p class="mt-{default}" style="margin-bottom:0.5rem;"></p>'
     return result
 
 def return_indirect_chart():
@@ -492,10 +522,10 @@ def return_word_class_url(class_tab):
 def return_word_instance_url(class_tab, instance):
     return fr"../../page/{class_tab}/{instance}.html"
 
-def return_component_header(df,tab, dict_df, instance):
+def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
     try:
         count = len(df[df[tab].notna()])
-        classcount = f'<span class="badge badge-pill badge-secondary">{count} items</span> '
+        classcount = ""
     except:
         classcount=""
 
@@ -508,9 +538,15 @@ def return_component_header(df,tab, dict_df, instance):
     if instance:
         explainer=f''
     else:
-        explainer = f'<p class="fs-1 text-secondary">{return_string_component(tab)}</p>'
-
-    header_text= f'<a class="text-muted">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
+        if tab not in ["User_Process", "Employee_Process"]:
+            explainer = f'<p class="text-secondary">{return_string_component(tab)}</p>'
+        else:
+            print(tab)
+            explainer = f''
+    if not custom_header_text:
+        header_text= f'<a class="text-secondary">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
+    else:
+        header_text=custom_header_text
     h1 = f'<h2 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
 
     grid3=return_grid3()
@@ -569,7 +605,7 @@ def return_content_class(tab, df,dict_df):
     grid2=return_grid2()
     grid3=return_grid3()
     part_direct = grid3.format(return_component_small_header("1. Class Overview"),"")+component_cy
-    part_inddirect=grid2.format(return_component_small_header("2. Instances"), cards)
+    part_inddirect=grid2.format(return_component_small_header("2. Instance Overview"), cards)
 
 
     content= header+spacer+part_direct+spacer+part_inddirect+spacer
@@ -583,12 +619,201 @@ def return_content_class(tab, df,dict_df):
 
 def return_content_index(dict_df):
     h1 = f'<h2 class="pt-5 pb-1" id="header" data-current_class="index"><i class="fa-solid fa-face-smile-wink fa-xl"></i> What is to mc² system?</h2>'
-    explainer = f'<p class="fs-1 pb-3 text-secondary">mc² is a system made by <b>CJ</b> to understand complex relations within NIO Europe: such as process relations, user journey, strategy to process relations and more. Mc² stands for Energy and is derived from the famous equation E=mc². The mission is to enable all people and give them energy.</p><hr/>'
-    p = f'<p class="fs-1  text-secondary">  <ul><b>How to Use:</b><li> <b>Left Click</b>: move entity around.</li><li><b>Right Click</b>: jump to the details page.</li><li><b>Mouse Wheel</b>: zoom in and out.</li></ul></p>'
-    p2 = f'<p class="fs-1  text-secondary">  <ul><b>Useful Examples:</b><li> <b>Employee -> Employee Process -> KPI</b>: Show all relevant KPIs to one employee from his perspective. </li><li><b>KPI -> Employee Process -> Employee</b>: See all relevant People related to one KPI. Useful for leaders. </li><li><b>Role -> Employee -> System</b>: See all systems that a particular role is using</li></ul></p>'
+    explainer = f'<p class=" pb-3 text-secondary">mc² is a system made by <b>CJ</b> to understand complex relations within NIO Europe: such as process relations, user journey, strategy to process relations and more. Mc² stands for Energy and is derived from the famous equation E=mc². The mission is to enable all people and give them energy.</p><hr/>'
+    p = f'<p class=" text-secondary">  <ul><b>How to Use:</b><li> <b>Left Click</b>: move entity around.</li><li><b>Right Click</b>: jump to the details page.</li><li><b>Mouse Wheel</b>: zoom in and out.</li></ul></p>'
+    p2 = f'<p class=" text-secondary">  <ul><b>Useful Examples:</b><li> <b>Employee -> Employee Process -> KPI</b>: Show all relevant KPIs to one employee from his perspective. </li><li><b>KPI -> Employee Process -> Employee</b>: See all relevant People related to one KPI. Useful for leaders. </li><li><b>Role -> Employee -> System</b>: See all systems that a particular role is using</li></ul></p>'
 
     cy,chart_js=return_component_cy(dict_df, highlight_classes=[x for x in dict_df.keys()], only_nodes=[x for x in dict_df.keys()])
     return template.format(content=h1 + explainer + p + cy + p2 , jsinclude=chart_js)
+
+
+
+def get_user_journey_banner(user_journey_instance):
+    if not user_journey_instance:
+        return ""
+
+    for file_path in glob.glob("img/*.jpg"):
+        file_name = os.path.basename(file_path)
+        file_name_withoutjpg = os.path.basename(file_name).replace(".jpg", "")
+        if file_name_withoutjpg in user_journey_instance:
+            if ".jpg" in file_name:
+                return f"../../img/{file_name}"
+    return ""
+
+
+
+
+def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscription"):
+
+    note="""
+            <main>
+  <nav class="section-nav">
+		<ol>
+			<li><a href="#introduction">Introduction</a></li>
+			<li><a href="#request-response">Request &amp; Response</a></li>
+			<li><a href="#authentication">Authentication</a></li>
+			<li><a href="#endpoints">Endpoints</a>
+				<ul>
+					<li class=""><a href="#endpoints--root">Root</a></li>
+					<li class=""><a href="#endpoints--cities-overview">Cities Overview</a></li>
+					<li class=""><a href="#endpoints--city-detail">City Detail</a></li>
+					<li class=""><a href="#endpoints--city-config">City Config</a></li>
+					<li class=""><a href="#endpoints--city-spots-overview">City Spots Overview</a></li>
+					<li class=""><a href="#endpoints--city-spot-detail">City Spot Detail</a></li>
+					<li class=""><a href="#endpoints--city-icons-overview">City Icons Overview</a></li>
+					<li class=""><a href="#endpoints--city-icon-detail">City Icon Detail</a></li>
+				</ul>
+			</li>
+			<li class=""><a href="#links">Links</a></li>
+			<li class=""><a href="#expanders">Expanders</a></li>
+			<li class=""><a href="#filters">Filters</a></li>
+		</ol>
+	</nav>
+
+
+	<div>
+		<h1>User Journey</h1>
+		<section id="introduction">
+			<h2>Introduction</h2>
+			<p>…</p>
+		</section>
+		<section id="request-response">
+			<h2>Request &amp; Response</h2>
+			<p>…</p>
+		</section>
+		<section id="authentication">
+			<h2>Authentication</h2>
+			<p>…</p>
+		</section>
+		<section id="endpoints">
+			<h2>Endpoints</h2>
+			<section id="endpoints--root">
+				<h3>Root</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--cities-overview">
+				<h3>Cities Overview</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--city-detail">
+				<h3>City Detail</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--city-config">
+				<h3>City Config</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--city-spots-overview">
+				<h3>City Spots Overview</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--city-spot-detail">
+				<h3>City Spot Detail</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--city-icons-overview">
+				<h3>City Icons Overview</h3>
+				<p>…</p>
+			</section>
+			<section id="endpoints--city-icon-detail">
+				<h3>City Icon Detail</h3>
+				<p>…</p>
+			</section>
+		</section>
+		<section id="links">
+			<h2>Links</h2>
+			<p>…</p>
+		</section>
+		<section id="expanders">
+			<h2>Expanders</h2>
+			<p>…</p>
+		</section>
+		<section id="filters">
+			<h2>Filters</h2>
+			<p>…</p>
+		</section>
+	</div>
+
+
+</main>
+
+    """
+
+    user_journey_template = """
+    <main id='main' data-forjourney="{}" data-forperspective="{}">
+      <nav class="section-nav mt-3" style="margin-right:20px;">
+            <ol > {}</ol>
+      </nav>
+    	<div class="mt-3" id="speechify_content" >
+    		""" + return_component_header(df=dict_df[tab], tab=tab, dict_df="", instance="", custom_header_text=f"{one_bm} {tab.replace('_',' ')}") + """
+    		<p class="mb-5" ><p>
+    		{}
+    	</div>
+    </main>
+        """
+
+    #now only checking user journey
+    df_user_or_employee_journey= dict_df[tab]
+    if tab=="User_Journey":
+        process_name="For User_Process"
+        process_name_without="User_Process"
+    else:
+        process_name="For Employee_Process"
+        process_name_without = "Employee_Process"
+
+
+    all_nav=""
+    all_section=""
+    for journey_counter, (key, row) in enumerate(df_user_or_employee_journey.iterrows()):
+        journey_counter=0#quick and dirty way to reset it for h2 labeling
+        if one_bm in key:
+            a_user_process=df_user_or_employee_journey.at[key,process_name]
+
+            #if this user journey has 1 or many processes, then the navvalue and secitonvalue will be replaced
+            # if user journey has 0 process. then it stays as key
+
+
+            if isinstance(a_user_process, str):
+                if len(a_user_process.split(",")) > 0:
+                    navvalue_content=""
+                    for process_counter, process in enumerate( a_user_process.split(",")):
+                        process_display=process.replace(" ","_")
+                        navvalue_content=navvalue_content+f'<li class=""><a href="#{process_display}">{process_display.replace("_"," ")}</a></li>'
+                    navvalue=f"<ul>{navvalue_content}</ul>"
+
+                    sectionvalue = ""
+
+                    for process_counter, process in enumerate( a_user_process.split(",")):
+                        label = f"{journey_counter+1}.{process_counter+1} "
+                        process_display = process.replace(" ", "_")
+                        link = f"<a href='../../page/{process_name.replace('For ','')}/{process.replace(' ', '_')}.html'>{label + process.replace('_', ' ')}</a>"
+                        image=f'<img class="journeyimg" src="../../attachments/MC2 Data-{process_name_without}_Attachment/{process.replace("_"," ")}_Process Flow.jpg" >'
+
+                        #get summary of the process
+                        df_process=dict_df[process_name.replace("For ","")]
+                        summary=df_process.at[process, "Process Summary"]
+                        sectionvalue = sectionvalue + f"<section id='{process_display}'><h4>{link}</h4>{image}{summary}</section>"
+
+                else:
+                    navvalue = ""
+                    sectionvalue = key
+            else:
+                navvalue = ""
+                sectionvalue = key
+
+
+            navid = key
+            sectionid = key
+            #for each user journey, get their user process
+            link=f"<a href='../../page/{tab}/{sectionid.replace(' ','_')}.html'>{journey_counter+1}. {sectionid.replace('_',' ')}</a>"
+            nav_element=f"<li><a href='#{navid}'>{navid.replace('_',' ')}</a> {navvalue}</li>"
+            user_journey_banner=f'<img class="journeyimg" src="{get_user_journey_banner(key)}" >'+return_component_spacer(default=5)
+            section_element=f"<section id='{sectionid}'><h2>{link}</h2><hr/>{user_journey_banner}{sectionvalue}</section>"
+            all_nav=all_nav+nav_element
+            all_section=all_section+section_element
+
+    content = user_journey_template.format(one_bm, tab,all_nav, all_section)
+    return template.format(content=content, jsinclude="")
 
 
 
@@ -623,7 +848,6 @@ def return_component_filter(tab, df):
         <select class="form-select" aria-label="Default select example" id="indirect_attribute">
         </select>
         """
-
 
     return [template_filter.format(items),js_part]
 
@@ -828,10 +1052,23 @@ def create_html():
     #index html
     Path(f"page/index").mkdir(parents=True, exist_ok=True)
     result = return_content_index(dict_df)
-
-
     with open(fr"page/index/index.html", "w", encoding="utf-8") as file:
         file.write(str(result))
+
+
+    #user journey specific Page, this comes after the general creation and overwrites the class html pages
+    for user_employee_journey in ["User_Journey", "Employee_Journey"]:
+        a_bm = ["Purchase", "Subscription", "Op-Leasing", "Fin-Leasing"]
+        for one_bm in a_bm:
+            Path(f"page/{user_employee_journey}").mkdir(parents=True, exist_ok=True)
+            result = return_content_user_journey(dict_df, tab=user_employee_journey, one_bm=one_bm)
+            with open(fr"page/{user_employee_journey}/{user_employee_journey}_{one_bm}.html", "w", encoding="utf-8") as file:
+                file.write(str(result))
+
+            #quit and dirt solution to store it also as general user journey so that other pages can access this page
+            with open(fr"page/{user_employee_journey}/{user_employee_journey}.html", "w", encoding="utf-8") as file:
+                file.write(str(result))
+
 
 
 

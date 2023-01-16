@@ -71,6 +71,10 @@ select{
 width:50% !important;
 }
 
+#select_country, #select_business, #select_perspective{
+width:50% !important;
+}
+
 .modal-dialog {
     width: 100%;
     max-width: none;
@@ -106,6 +110,7 @@ padding:0px !important;
 body{
 background-color:#f8f8f8;
 font-size:0.9rem;
+position: relative;
 }
 
 h4{
@@ -123,9 +128,12 @@ margin-right:0px;
 }
 
 
-#instance_img{
+#instance_img, .journeyimg{
 width:100%;
 }
+
+
+
 
 input[type=checkbox]
 {
@@ -135,4 +143,141 @@ input[type=checkbox]
   -webkit-transform: scale(2); /* Safari and Chrome */
   -o-transform: scale(2); /* Opera */
   padding: 10px;
+}
+
+
+
+.blue{
+background-color:"blue";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Styles required only for the example above */
+.scrollspy-example-collapsible {
+  position: relative;
+  height: 200px;
+  overflow: auto;
+}
+
+
+
+
+
+/* 1. Enable smooth scrolling */
+html {
+	scroll-behavior: smooth;
+}
+
+/* 2. Make nav sticky */
+main > nav {
+	position: sticky;
+	top: 10px;
+	align-self: start;
+	max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+}
+
+/* 3. ScrollSpy active styles (see JS tab for activation) */
+.section-nav li.active > a {
+	color: #333;
+	font-weight: 500;
+}
+
+/* Sidebar Navigation */
+.section-nav {
+	border-left: 1px solid #efefef;
+}
+
+.section-nav a {
+
+	display: block;
+	padding: .125rem 0;
+	color: #ccc;
+	transition: all 50ms ease-in-out; /* 💡 This small transition makes setting of the active state smooth */
+}
+
+.section-nav a:hover,
+.section-nav a:focus {
+	color: #666;
+}
+
+a{
+text-decoration:none;
+}
+
+
+ul, ol {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+
+
+main ul {
+  list-style-type: circle;
+}
+
+main ol  {
+  list-style-type: auto;
+}
+
+
+
+
+/** page layout **/
+main {
+	display: grid;
+	grid-template-columns:  30% 70%;
+
+	/** max-width: 100em; **/
+	width: 100%;
+	margin: 0 auto;
+}
+
+/** enlarge the sections for this demo, so that we have a long scrollable page **/
+section {
+	padding-bottom: 0rem;
+}
+
+section section {
+	padding-bottom: 10rem;
+}
+
+main > nav, main > div{
+background-color:white;
+padding:10px;
+}
+
+
+li {
+	margin-left: 1rem;
 }
