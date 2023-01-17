@@ -115,7 +115,6 @@ var df=data[tab];
             }
         });
     });
-    console.log(Array.from(result),"what");
 return [tab].concat(Array.from(result));
 }
 
@@ -165,16 +164,24 @@ function get_class_columns(class_tab) {
 
 
 
+var last_event;
 
+
+function update_chart2(){
+    var event = window.last_event;
+    var target_class=event.target.id();
+    var traverse_nodes = traverse_to(page_class, event.target.id(), dict_cy["cy"]);
+    dict_cy["cy2"]=create_cy(id = "cy2", current_class = page_class, current_instance = page_instance,  elements = generate_instance_elements(page_class, event.target.id() , highlight_class=target_class));
+    dict_cy["cy3"]=create_cy(id = "cy3", current_class = page_class, current_instance = page_instance,  elements = generate_instance_elements(page_class, event.target.id() , highlight_class=target_class));
+}
 
 
 
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
 
 
-
    if(id=="cy"){
-        var layout_style="breadthfirst";
+        var layout_style="cise";
    }else{
     var selected_layout= $("#layoutselect").val();
     if (checkdata(selected_layout)){
@@ -211,7 +218,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
                 }
             },
             {
-                selector: '.red',
+                selector: '.blue',
                 css: {
                     'background-color': '#0099ff',
                     'line-color': '#0099ff',
@@ -227,16 +234,23 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             },
 
             {
-                selector: '.blue',
+                selector: '.red',
                 css: {
-                    'background-color': '#0099ff',
+                    'background-color': 'red',
+                }
+            },
+
+            {
+                selector: '.highlight',
+                css: {
+                    'background-color': 'red',
                 }
             },
 
             {
                 selector: 'edge.blue',
                 css: {
-                    'line-color': 'red',
+                    'line-color': '#0099ff',
                 }
             },
 
@@ -260,11 +274,14 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 
         layout: {
             name: layout_style,
-            spacingFactor: 0.95,
+            spacingFactor: 1,
             avoidOverlap: true,
-            padding: 30,
+            padding: 20,
+            refresh:2000,
             animate: true,
             nodeDimensionsIncludeLabels: true,
+            idealInterClusterEdgeLengthCoefficient: 0.95,
+            nodeRepulsion: 50000,
         },
         ready: function() {
 
@@ -272,10 +289,12 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     });
 
 
+
+
     //initialization
     //cy.$('#' + page_class).addClass('bigger');//make instance node look bigger
-    cy.$('#' + page_class).addClass('red'); // make instance node blue
-    cy.$('#' + page_instance).addClass('red');
+    cy.$('#' + page_class).addClass('blue'); // make instance node blue
+    cy.$('#' + page_instance).addClass('blue');
 
     cy.$('edge').addClass('edge_default');
     if (page_class != "index") {
@@ -284,6 +303,14 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
         }
     }
 
+    //highlight the end node in instance chart
+    $.each(cy.$('node'), function(key, val) {
+        console.log("asdsadsa ",key,val.data());
+        var node_data=val.data();
+        if(node_data["class"]=="highlight"){
+            val.addClass("highlight");
+        }
+    });
 
 
     // right click even to jump to next page
@@ -299,22 +326,19 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     // bind tapstart to edges and highlight the connected nodes
     cy.bind('tapstart', 'edge', function(event) {
         var connected = event.target.connectedNodes();
-        //connected.addClass('blue');
     });
 
 
     // bind tapend to edges and remove the highlight from the connected nodes
     cy.bind('tapend', 'edge', function(event) {
         var connected = event.target.connectedNodes();
-        //connected.removeClass('blue');
     });
 
     // bind tapend to node and remove the highlight from the connected nodes
     if (id == "cy") {
         cy.bind('tapstart', 'node', function(event) {
-            var traverse_nodes = traverse_to(page_class, event.target.id(), cy);
-            dict_cy["cy2"]=create_cy(id = "cy2", current_class = page_class, current_instance = page_instance, elements = generate_instance_elements(page_class, event.target.id()));
-            dict_cy["cy3"]=create_cy(id = "cy3", current_class = page_class, current_instance = page_instance, elements = generate_instance_elements(page_class, event.target.id()));
+            window.last_event=event;
+            update_chart2();
         }); //end of binding
 
     }else  if (id == "cy2"){
@@ -407,7 +431,7 @@ function generate_class_elements(current_class, current_instance) {
 
 
 //generate instance network
-function generate_instance_elements(current_class, target_class) {
+function generate_instance_elements(current_class, target_class, highlight_class) {
     var elements = []
     var all_class = get_all_class();
 
@@ -439,7 +463,7 @@ function generate_instance_elements(current_class, target_class) {
     found_instance_node_list.push({
         data: {
             'id': source_instance,
-            'label': underscore2space(page_class)+" = "+underscore2space(source_instance),
+            'label': underscore2space(page_class)+" =\n"+underscore2space(source_instance),
             'href': "../../page/" + source_instance + "/" + source_instance + ".html"
         }
     });
@@ -457,8 +481,9 @@ function generate_instance_elements(current_class, target_class) {
     elements.push({
         data: {
             'id': current_instance,
-            'label': underscore2space(current_instance),
+            'label': current_class+" =\n"+underscore2space(current_instance),
             'href': "../../page/" + current_class + "/" + current_instance + ".html"
+
         }
     });
 
@@ -485,11 +510,10 @@ function generate_instance_elements(current_class, target_class) {
             var item_array = cell_data_or_array.split(",");
             $.each(item_array, function(key, found_instance) {
                 //push node
-
                 found_instance_node_list.push({
                     data: {
                         'id': found_instance,
-                        'label': underscore2space(found_instance),
+                        'label': current_class+": "+underscore2space(found_instance),
                         'href': "../../page/" + found_instance + "/" + found_instance + ".html"
                     }
                 });
@@ -568,23 +592,26 @@ return result;//not found current_node in path, which is strange,should not happ
 
 
 //there are two version. 1 version to keep passing results, one version to aggregate results. option2
+//a_nodes = nodes to be traversed andprocessed, cleared path is result
 function rekursive_traverse(a_nodes, cleared_path, came="0"){
-    if (checkdata(a_nodes==false)){
+    if (checkdata(a_nodes==false)){ //a_nodes is undefined
+        console.log("section 0. ", a_nodes, a_nodes.length, came);
         return [];
     }
-
-
-    if (a_nodes.length==0){//if list is 0 =  finished
-        console.log("section 1. ", a_nodes, came);
+    if (a_nodes.length==0){// a_nodes.leng == 0
+        console.log("section 1. ", a_nodes,  a_nodes.length, came);
         return [];
-    }else if (a_nodes.length>1){// list has more than 1 node
+    }else if (a_nodes.length>1){// a_nodes.leng > 1
 
         //do the first one, give the next one to rekursion
-        var first_part=rekursive_traverse([a_nodes[0]], cleared_path, came="2.1");
-        var other_part=rekursive_traverse(a_nodes.shift(), cleared_path, came="2.2");
+        var first_part=rekursive_traverse([a_nodes[0]], cleared_path, came="2.1"); //split first node
+        console.log("section 2.1 ", a_nodes, a_nodes.length, came, [a_nodes[0]]);
 
+        var other_part=rekursive_traverse(a_nodes.slice(1), cleared_path, came="2.2"); //rest of the nodes
+        console.log("section 2.2 ", a_nodes, a_nodes.length, came, a_nodes.slice(1));
         return first_part.concat(other_part);
-    }else if (a_nodes.length=1){ // list has exactly 1 node
+
+    }else { // a_nodes.leng == 1
 
         //if a_nodes is undefined, then continue
         //expand of existing information
@@ -593,16 +620,13 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             var target_class=a_nodes[0]["target_class"];
             var source_instance=a_nodes[0]["source_instance"];
         }catch{
-            console.log("section 3.1 ", a_nodes, came);
+            console.log("section 3.1 ", a_nodes,  a_nodes.length,came);
             return [];
         }
 
-        console.log("section 3.2 ", a_nodes, came);
-
-
 
         if (target_class==-1){
-            console.log("section 3.3 ", a_nodes, came);
+            console.log("section 3.2 ", a_nodes, a_nodes.length, came);
             return []; // the node has children but user doesnt want to see it. potential bug
         }
 
@@ -636,14 +660,27 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             next_a_nodes.push({source_class:target_class, target_class:next_target_class, source_instance:cell_content});
 
 
+
+            console.log("clear",cleared_path[cleared_path.length-1]);
+            //add class for the last element in instance chart
+            if(source_class==cleared_path[cleared_path.length-1]){
+                var highlightornot='highlight';
+            }else{
+                var highlightornot='';
+            }
+
             //result for cy nodes
             var one_found_node={
                 data: {
                     'id': cell_content,
-                    'label': underscore2space(cell_content),
-                    'href': "../../page/" + target_class + "/" + cell_content + ".html"
+                    'label': source_class.replace("_"," ")+" =\n"+underscore2space(cell_content),
+                    'href': "../../page/" + target_class + "/" + cell_content + ".html",
+                    'class': highlightornot
                 }
             };
+
+
+            //add to array
             found_instance_for_cy.push(one_found_node);
 
 
@@ -657,7 +694,6 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             };
             found_edge_for_cy.push(one_found_edge);
 
-
         });
 
 
@@ -665,8 +701,8 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
 
         //general: always let founded instance traverse to their instance
         //specific: if their target_class==-1(not in path) or i
-        console.log("end node ",a_nodes);
-        return found_together.concat(rekursive_traverse(a_nodes=next_a_nodes, cleared_path=cleared_path , came="3"));
+        console.log("section 3.3 ", a_nodes, a_nodes.length, came, next_a_nodes);
+        return found_together.concat(rekursive_traverse(a_nodes=next_a_nodes, cleared_path=cleared_path , came="3.3"));
 
     }
 
@@ -687,12 +723,17 @@ function traverse_to(start_node, end_node, cy) {
     var traverse_nodes = aStar.path.connectedNodes();
 
     //add style
+    cy.$('.blue').removeClass('blue').addClass('edge_default');
     cy.$('.red').removeClass('red').addClass('edge_default');
     $.each(traverse_nodes, function(node_key, node_class) {
-        node_class.addClass('red');
+        node_class.addClass('blue');
     });
+
+    var last = traverse_nodes[traverse_nodes.length - 1];
+    last.addClass('red').removeClass('blue');
+
     $.each(aStar.path, function(edge_key, edge_obj) {
-        edge_obj.addClass('red').removeClass('edge_default');
+        edge_obj.addClass('blue').removeClass('edge_default');
     });
 
     //update_class_display();
@@ -731,6 +772,7 @@ return "<ul>"+lis+"</ul>";
 function produce_li_for_word(row_index,cell_data){
     var url = get_instance_url(cell_data);
     var dot = row_index!="" ? ": ": "";
+    row_index=row_index.replace("_", " ");
     if (url !=''){
         var li="<li>"+row_index+dot+"<a href='"+url+"'>"+underscore2space(cell_data)+"</a></li>";
     }else{
@@ -740,31 +782,33 @@ function produce_li_for_word(row_index,cell_data){
 }
 
 function display_instance_attribute_aslist(instance,instance_class){
-var df=data[instance_class];
-var lis="";
-    $.each(df, function(df_index, row) {
-        if(row[instance_class]==instance){
-            $.each(row, function(row_index, cell_data) {
-                var result_display;// result can belink, can be <a></a>
-                if (typeof(cell_data)!="string"){// not string at all
-                    lis=lis+produce_li_for_word(row_index, cell_data);
-                }else if (cell_data.includes(",")){//string with multiple items
-                    lis=lis+"<li>"+row_index+": "+produce_lis(cell_data.split(","))+"</li>";
-                }else{//string but with only one item
-                    lis=lis+produce_li_for_word(row_index,cell_data);
-                }
+    var df=data[instance_class];
+    var lis="";
+        $.each(df, function(df_index, row) {
+            if(row[instance_class]==instance){
+                $.each(row, function(row_index, cell_data) {
+                    console.log(cell_data, typeof(cell_data));
+                    var result_display;// result can belink, can be <a></a>
+                    if (checkdata(cell_data)==false){// not string at all
+                        //lis=lis+produce_li_for_word(row_index, cell_data);
+                    }else if (row_index == "MC2 Link" || row_index == "Process Flow" || row_index == instance_class){
 
-            });
-        }
-    });
+                    }else if (cell_data.includes(",")){//string with multiple items
+                        lis=lis+"<li>"+row_index.replace("_"," ")+": "+produce_lis(cell_data.split(","))+"</li>";
+                    }else{//string but with only one item
+                        lis=lis+produce_li_for_word(row_index,cell_data);
+                    }
 
-    var ul="<ul>"+lis+"</ul>";
+                });
+            }
+        });
+        var ul="<ul>"+lis+"</ul>";
 
-return ul ;
+    return ul ;
 }
 
 function get_layout_options(){
-var result=["breadthfirst layout", "cose layout",  "concentric layout","circle layout"];
+var result=["dagre layout", "breadthfirst layout", "cose layout", "cise layout",  "concentric layout","circle layout"];
 return result;
 }
 
@@ -935,12 +979,9 @@ $(document).ready(function() {
     $('#layoutselect').change(function(){
         var selected_layout = $('#layoutselect').val();
 
-        $.each(["cy2","cy3"], function(df_index, cy_index) {
-            var layout = dict_cy[cy_index].layout({
-                name: selected_layout.replace(" layout", "")
-            });
-            layout.run();
-        });
+        update_chart2();
+
+
 
 
 
@@ -963,8 +1004,8 @@ $(document).ready(function() {
     });
 
 
-
-
+    var ul= display_instance_attribute_aslist(instance=page_instance,instance_class=page_class);
+    $('#left_direct').html(ul);
 
 
 

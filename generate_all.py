@@ -305,13 +305,7 @@ def return_global_html():
 
     #create edgematrix
     test="""
-
-    
-    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-    
-    
-   <!-- Cytoscape extention -->
+        <!-- Cytoscape extention -->
 		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
 
 		<!-- Jquery for graphml -->
@@ -322,17 +316,8 @@ def return_global_html():
 		<script src="https://unpkg.com/avsdf-base/avsdf-base.js"></script>
 		<script src="https://unpkg.com/cose-base@1.0.3/cose-base.js"></script>
 		<script src="https://unpkg.com/cytoscape-graphml/cytoscape-graphml.js"></script>
-
-		<!-- CiSE Bundle -->
-		<script src="../../bootstrap/extensions/cytoscape-cise.js"></script>
-    
-    
-    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-    <script src="https://unpkg.com/webcola/WebCola/cola.min.js"></script> 
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape-cola@2.4.0/cytoscape-cola.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.js"></script>
-    
-    """
+		<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+	"""
 
     meta='<meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1">'
     js_jquery = '<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>'
@@ -340,8 +325,10 @@ def return_global_html():
     js_bootstrap = '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>'
     js_fa = '<script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js" integrity="sha384-rOA1PnstxnOBLzCLMcre8ybwbTmemjzdNlILg8O7z1lUkLXozs4DHonlDtnE7fpc" crossorigin="anonymous"></script>'
     js_cytoscape = '<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js" integrity="sha512-gEWKnYYa1/1c3jOuT9PR7NxiVI1bwn02DeJGsl+lMVQ1fWMNvtjkjxIApTdbJ/wcDjQmbf+McWahXwipdC9bGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>'
-    js_cj = '<script  src="../../bootstrap/js/cj.js"  ></script>'
-    js_data = '<script  src="../../bootstrap/js/data.js"  ></script>'
+    js_cj = '<script  src="../../bootstrap/js/cj.js"  ></script>'+test
+    js_cise = '<script  src="../../bootstrap/js/cytoscape-cise.js"></script>'
+    js_dagre = '<script  src="../../bootstrap/js/cytoscape-dagre.js"></script>'
+    js_data = js_dagre+js_cise+ '<script  src="../../bootstrap/js/data.js"  ></script>'
 
     css_fa = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">'
     css_bootstrap = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">'
@@ -388,12 +375,12 @@ def return_component_direct_relations(instance, row, tab, dict_df):
     return ul.format(lis)
 
 
-def return_bool_instance_attachment(instance):
+def return_bool_instance_attachment(instance, tab):
     instance_with_space=instance.replace("_"," ")
-    for file_path in glob.glob("attachments/*.jpg"):
+    for file_path in glob.glob(f"attachments/MC2 Data-{tab}_Attachment/*.jpg"):
         file_name=os.path.basename(file_path).replace(".jpg","").replace("_Process Flow","")
         if file_name == instance_with_space:
-            return True
+            return f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow.jpg'
     return False
 
 
@@ -427,7 +414,7 @@ def return_grid2():
                     
                     {}
                   </div>
-                  <div class="card-body mb-3">
+                  <div class="card-body mb-5">
                     {}
                   </div>
                 </div>
@@ -487,13 +474,14 @@ def return_content_instance(instance, row, tab, dict_df):
 </div>
     """
 
-    direct_part_left=("<div class='width100'>"+ ul+ "</div>")
+    direct_part_left=("<div class='width100' id='left_direct'>"+ ul + "</div>")
+    direct_part_left=("<div class='width100' id='left_direct'>"+ "" + "</div>") #this function is now build in javascript
     direct_part_right=("<div class='width100'>"+ label_direct_compare+ "</div>")
 
     grid2=return_grid2()
     leftrightgrid=return_leftvsright()
-    instance_has_image=return_bool_instance_attachment(instance)
-    process_image=f'<img id="instance_img" src="../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow.jpg" alt="{instance} Attached Image from Bitable">'+spacer if instance_has_image else ""
+    instance_img_url=return_bool_instance_attachment(instance=instance, tab=tab)
+    process_image=f'<img id="instance_img" src="{instance_img_url}" alt="{instance} Attached Image from Bitable">'+spacer if instance_img_url else ""
     direct_part=process_image+ grid2.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
     indirect_part= grid2.format(label_indirect_attribute, leftrightgrid.format(explainer, layout_select+fullscreen_button+modal) ) +  return_grid1().format(cy1,cy2)
 
@@ -798,7 +786,12 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
 
                         #get summary of the process
                         df_process=dict_df[process_name.replace("For ","")]
-                        summary=df_process.at[process, "Process Summary"]
+                        try:
+                            summary=df_process.at[process, "Process Summary"]
+                        except:
+                            print(df_process)
+                            print(journey_counter, key, process_counter, process)
+                            summary=""
                         sectionvalue = sectionvalue + f"<section id='{process_display}'><h4>{link}</h4>{image}{summary}</section>"
 
                 else:
