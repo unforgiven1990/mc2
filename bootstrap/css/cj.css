@@ -11,6 +11,31 @@ ul {
 .mycard{
 }
 
+.noli{
+list-style:none;
+margin-left:0rem;
+}
+
+#indirect_result{
+background-color: white;
+padding-left:50%;
+}
+
+.table .labeltd{
+background-color: #008bff12;
+}
+
+
+.table td{
+border-bottom:solid 1px #eee;
+border-top:solid 1px #eee;
+}
+
+.card{
+margin-top: 3vh;
+margin-bottom: 3vh;
+}
+
 .container > #cy{
   width: 100% !important;
 }
@@ -36,8 +61,8 @@ ul {
 .card-header {
     padding: 0.50rem 1rem;
     margin-bottom: 0;
-    background-color: rgb(240 240 240 / 0%);
     border-bottom: 1px solid rgb(0 0 0  / 10%);
+    background-color: white;
 }
 
 .card {
@@ -108,12 +133,33 @@ padding:0px !important;
 
 
 body{
-background-color:#f8f8f8;
+background-color:#ededed;
 font-size:0.9rem;
 position: relative;
 }
 
-h4{
+h1{
+font-size:1.5rem;
+}
+
+h2, h2 > a, h2 > p{
+font-size:1.3rem;
+}
+
+h3{
+font-size:1.2rem;
+}
+
+h4, h4 > a, h4 > p{
+font-size:1.1rem;
+}
+
+p, a{
+font-size:0.9rem;
+}
+
+
+h1,h2,h3,h4{
 margin-bottom: 0rem;
 }
 
@@ -128,9 +174,19 @@ margin-right:0px;
 }
 
 
-#instance_img, .journeyimg{
+.instance_img, .journeyimg{
 width:100%;
 }
+
+
+.background1{
+
+}
+
+.background2{
+
+}
+
 
 
 

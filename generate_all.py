@@ -33,8 +33,6 @@ from deep_translator import (GoogleTranslator,
                              batch_detection)
 
 
-def space_replacer(word):
-    return word.replace(" ","_")
 
 dict_df_wb_pair=[] #to accelerate replace, not repeating the process
 def get_dict_df():
@@ -49,6 +47,11 @@ def get_dict_df():
             dict_df_wb_pair= [dict_df,wb]
             return dict_df_wb_pair
 
+def space_replacer(word):
+    return word.replace(" ","_")
+
+def underscore_replacer(word):
+    return word.replace("_"," ")
 
 def create_class_map():
     dict_df,wb=get_dict_df()
@@ -65,9 +68,7 @@ def generate_lark_to_mc2_link():
     for tab,df in dict_df.items():
         print(f'HYPERLINK(CONCATENATE("https://unforgiven1990.github.io/mc2/page/","{tab}","/",SUBSTITUTE([{tab}]," ","_"),".html"), "LINK")')
 
-def parse_to_json():
-    pass
-
+#this function exists in javascript and aStar path, is obsolte
 def return_array_related_classes(tab, connections=2):
     result = []
     for excel_data_raw in glob.glob("*.xlsx"):
@@ -104,6 +105,8 @@ def cleanup(dict_df):
                      '"':'',
                      "/":'',
                      ":":'',
+                     ")":'',
+                     "(":'',
                      " ":'_', #still empty space in tab data not converted
                      }
 
@@ -124,7 +127,10 @@ def cleanup(dict_df):
             #replace all index data = index
             correct_item=copied_index_item # starting position
             for forbidden_char, toreplace in forbidden_chars.items():
-                correct_item=correct_item.replace(forbidden_char,toreplace)
+                try:
+                    correct_item=correct_item.replace(forbidden_char,toreplace)
+                except:
+                    correct_item=correct_item
             df.at[index,"RemoveMe"]=correct_item
             dict_to_replace[copied_index_item]=correct_item
 
@@ -158,6 +164,7 @@ def return_string_gallery(word):
         "Car":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIjUl8dRCbolCI&view=vewEEtBGbz",
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vew2GwzJXf",
         "Business_Model":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
+        "Business_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
         "User_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblAyuTuEKVVVrZ3&view=vewBZ5BYQK",
         "Employee_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblgDQkj9F2O3XSd&view=vewxV21Rjf",
         "Country":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblDmXtQ5JPySoUz&view=vewrnTjfGP",
@@ -165,19 +172,22 @@ def return_string_gallery(word):
     }
     return dict_gallery[word]
 
+
+
 def return_string_icon(word):
     """returns a fa icon"""
     dict_icon={
         "Departments": "fa-sitemap",
         "L1_Department":"fa-folder-tree",
-        "Department":"fa-sitemap",
+        "Department":"fa-folder-tree",
+        "Business_Class":"fa-sitemap",
         "L2_Department":"fa-folder-tree",
         "L3_Department":"fa-folder-tree",
         "Leader":"fa-user-tie",
         "Employee":"fa-user",
         "Role":"fa-user-tag",
         "Process": "fa-repeat",
-        "User_Process":"fa-route",
+        "User_Process":"fa-left-right",
         "Employee_Process":"fa-people-arrows",
         "Capability":"fa-location-crosshairs",
         "System":"fa-screwdriver-wrench",
@@ -189,7 +199,7 @@ def return_string_icon(word):
         "KPI":"fa-chart-simple",
         "Business_Model":"fa-money-bill",
         "User_Journey":"fa-route",
-        "Employee_Journey":"fa-route",
+        "Employee_Journey":"fa-list-check",
         "Country":"fa-globe",
         "Others":"fa-gear",
     }
@@ -202,6 +212,7 @@ def return_string_component(word):
         "Departments": "",
         "L1_Department":"This view shows you what L1 department exists that are relevant for EB.",
         "Department":"This view shows you what L1 department exists that are relevant for EB.",
+        "Business_Class":"This view is to show high level abstrac classes aggregated by many departments",
         "L2_Department":"This view shows you what L2 departments under European Business.",
         "L3_Department":"This view shows you what L3 departments under European Business.",
         "Leader":"This summary shows who are the department leaders and what do they lead.",
@@ -231,6 +242,7 @@ def return_string_editurl(word):
     """returns a fa icon"""
     dict_url={
         "Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxOzBlxXbfgFi&view=vewgFkOi9f",
+        "Business_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbltmeBARSbQIJxN&view=vewN8BQVGq",
         "L1_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxOzBlxXbfgFi&view=vewgFkOi9f",
         "L2_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblcnQTN78GEt3nR&view=vewjua7iRe",
         "L3_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxoLGbBcp1yUZ&view=vew8hBjN9a",
@@ -255,14 +267,9 @@ def return_string_editurl(word):
 
 
 
-
-
-
-
-
 def return_global_navbar():
     dict_nav = {
-        "People": [  "Role", "Employee","Department"],
+        "People": [  "Role", "Employee","Department","Business_Class"],
         "Strategy": ["Strategy", "Capability", "Business_Model"],
         "Process": ["User_Journey","User_Process", "Employee_Journey","Employee_Process",    "KPI"],
         "Others": ["System", "City", "Country", "Car"],
@@ -274,7 +281,7 @@ def return_global_navbar():
         navbar_content_li_template = f'<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="fa-solid {return_string_icon(key)}"></i> {key} </a> <div class="dropdown-menu" aria-labelledby="navbarDropdown">' + '{}</div></li>'
         navbar_content_li_content=""
         for counter,label in enumerate(array):
-            navbar_content_li_content=navbar_content_li_content+f'<a class="dropdown-item" href="../../page/{label}/{label}.html"><i class="fa-solid {return_string_icon(label)}"></i> {label}</a>'
+            navbar_content_li_content=navbar_content_li_content+f'<a class="dropdown-item" href="../../page/{label}/{label}.html"><i class="fa-solid {return_string_icon(label)}"></i> {underscore_replacer(label)}</a>'
             if counter+1<len(array):#add divider
                 navbar_content_li_content = navbar_content_li_content + f'<div class="dropdown-divider"></div>'
 
@@ -283,8 +290,6 @@ def return_global_navbar():
 
     global global_navbar
     global_navbar= navbar_template.format(navbar_content)
-
-
 
 
 
@@ -345,6 +350,7 @@ def return_global_html():
     template = head+body+bottomspacer
 
 
+#to be deleted
 def return_component_direct_relations(instance, row, tab, dict_df):
     ul="<ul>{}</ul>"
     lis = ""
@@ -375,13 +381,28 @@ def return_component_direct_relations(instance, row, tab, dict_df):
     return ul.format(lis)
 
 
-def return_bool_instance_attachment(instance, tab):
+#get all images of a particular instance
+def return_instance_img(instance, tab, imgclass):
+    a_img=[]
     instance_with_space=instance.replace("_"," ")
+
     for file_path in glob.glob(f"attachments/MC2 Data-{tab}_Attachment/*.jpg"):
         file_name=os.path.basename(file_path).replace(".jpg","").replace("_Process Flow","")
-        if file_name == instance_with_space:
-            return f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow.jpg'
-    return False
+        #check this name for first image against this instance
+        if instance_with_space ==  file_name :
+            url= f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow.jpg'
+            image = f'<img class="{imgclass} mb-3" src="{url}" >'
+            a_img+=[image]
+
+
+        #check this name for other images (n) against this instance
+        for potential_counter in range(10):
+            #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
+                if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
+                    url = f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}).jpg'
+                    image = f'<img class="{imgclass}" src="{url}" >'
+                    a_img += [image]
+    return "".join(a_img)
 
 
 def return_leftvsright():
@@ -408,21 +429,16 @@ def return_grid1():#left vs right for poor people
                 </div>
                 """
 
-def return_grid2():
-    return """ <div class="card">
-                  <div class="card-header">
-                    
+def return_grid2(other_class="mb-5", card_class=''):
+    return """ <div class="card """+other_class+" "+card_class+""" ">
+                  <div class="card-header">                    
                     {}
                   </div>
-                  <div class="card-body mb-5">
+                  <div class="card-body """+""+""" ">
                     {}
                   </div>
                 </div>
                 """
-
-
-
-
 
 def return_grid3():
     return  """
@@ -434,14 +450,11 @@ def return_grid3():
                 """
 
 
-
-
-
 def return_content_instance(instance, row, tab, dict_df):
     real_instance = instance
     ul=return_component_direct_relations(instance, row, tab, dict_df)
 
-    cy1, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50 width50")
+    cy1, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50 width50 background2")
     label_direct_attribute=return_component_small_header("1. Direct Relations")
 
     button1=return_template_dropdown(id="filter_class",text="Class")
@@ -455,8 +468,9 @@ def return_content_instance(instance, row, tab, dict_df):
     spacer= return_component_spacer()
     template_card=return_template_card()
     cy2=return_indirect_chart()
-    layout_select="<select id='layoutselect'><option></option></select>"
-    fullscreen_button='<button class="btn btn-primary ml-1" id="fullscreen_button"> <i class="fa fa-expand"></i></button>'
+    cy2_text_result=get_cy2_result()
+    layout_select="<select class='' id='layoutselect'><option></option></select>"
+    fullscreen_button='<button class="btn btn-primary ml-3" id="fullscreen_button"> <i class="fa fa-expand"></i></button>'
     explainer=f'<ul><li><b>Left Click</b>: See indirect relations from {real_instance.replace("_"," ")}</li><li><b>Right Click</b>: Go to the Details Page of the selection.</li></ul>'
     modal="""
 <div id="modal" class="modal modal-fullscreen-xl" id="modal-fullscreen-xl" tabindex="-1" role="dialog" aria-hidden="true">
@@ -478,13 +492,14 @@ def return_content_instance(instance, row, tab, dict_df):
     direct_part_left=("<div class='width100' id='left_direct'>"+ "" + "</div>") #this function is now build in javascript
     direct_part_right=("<div class='width100'>"+ label_direct_compare+ "</div>")
 
-    grid2=return_grid2()
+    grid1=return_grid2(other_class="", card_class="background1")
+    grid2=return_grid2(other_class="mb-0", card_class="background2")
     leftrightgrid=return_leftvsright()
-    instance_img_url=return_bool_instance_attachment(instance=instance, tab=tab)
-    process_image=f'<img id="instance_img" src="{instance_img_url}" alt="{instance} Attached Image from Bitable">'+spacer if instance_img_url else ""
-    direct_part=process_image+ grid2.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
-    indirect_part= grid2.format(label_indirect_attribute, leftrightgrid.format(explainer, layout_select+fullscreen_button+modal) ) +  return_grid1().format(cy1,cy2)
+    process_image=return_instance_img(instance=instance, tab=tab, imgclass="instance_img")
 
+    #process_image=f'<img id="instance_img" src="{instance_img_url}" alt="{instance} Attached Image from Bitable">'+spacer if instance_img_url else ""
+    direct_part=process_image+ grid1.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
+    indirect_part= grid2.format(label_indirect_attribute, leftrightgrid.format(explainer, layout_select+fullscreen_button+modal) ) +  f"<div class='background2'>{return_grid1().format(cy1,cy2)}</div>" +  f"<div class='background2'>{return_grid1().format('',cy2_text_result)}</div>"
 
     content=header + spacer+direct_part + spacer+indirect_part+ spacer
     return template.format(content=content, jsinclude=component_cy_js)
@@ -493,23 +508,25 @@ def return_content_instance(instance, row, tab, dict_df):
 def return_template_card():
     result="""
     <div class="card" style="width: 100%;">
-  <div class="card-body">
-    {}
-  </div>
-</div>
+      <div class="card-body">
+        {}
+      </div>
+    </div>
     """
     return result
 
 def return_component_spacer(default=0):
-    result = f'<p class="mt-{default}" style="margin-bottom:0.5rem;"></p>'
-    return result
+    return f'<p class="mt-{default}" style="margin-bottom:0.5rem;"></p>'
+
+def get_cy2_result():
+    return "<ul id='indirect_result' class='pb-5' ></ul>"
 
 def return_indirect_chart():
-    return f"<div id='cy2' class=' mb-3 height50 width50'></div>"
+    return f"""<div id='cy2' class=' mb-3 height50 width50 background2'></div>
+"""
 
 def return_component_small_header(text="",component_inside=''):
-    return f'<h4>{text}{component_inside}</h4>'
-
+    return f'<h3><b>{text}{component_inside}</b></h3>'
 
 def return_word_class_url(class_tab):
     return fr"../../page/{class_tab}/{class_tab}.html"
@@ -525,10 +542,12 @@ def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
         classcount=""
 
     if instance:
+
         h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} "></i></a>'
+        h1_icon = f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
     else:
-        h1_icon=f'<i class="fa-solid {return_string_icon(tab)} "></i>'
-    edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1.25rem;" target="_blank" type="button" class="btn btn-primary btn-sm fs-3" ><i class="fa-solid fa-edit"></i></a>'
+        h1_icon=f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
+    edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1rem;" target="_blank" type="button" class="btn btn-primary btn-sm" ><i class="fa-solid fa-edit"></i></a>'
     other_classes=""
     if instance:
         explainer=f''
@@ -542,13 +561,13 @@ def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
         header_text= f'<a class="text-secondary">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
     else:
         header_text=custom_header_text
-    h1 = f'<h2 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text} {classcount} {edit} </h2>' +explainer
+    h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" ><b>{h1_icon} {header_text} {classcount}</b> {edit} </h1>' +explainer
 
     grid3=return_grid3()
     h1=grid3.format(h1)
     return return_component_spacer()+h1
 
-
+#this function also exist in javascript, is obsolte
 def return_linkable_attributes(df):
     result=[]
     for col in df.columns:
@@ -562,7 +581,7 @@ def return_content_class(tab, df,dict_df):
     for (fakekey, row),key in zip(df.iterrows(),df[tab]):
         if pd.isna(key) or key is None:
             continue
-        cardstart=f'<div id="{space_replacer(key)}" class="card m-1 mb-1 " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
+        cardstart=f'<div id="{space_replacer(key)}" class="card " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
         cardmiddle=""
         for row_key, row_item in row.items():
             if row_key!=tab:
@@ -576,8 +595,6 @@ def return_content_class(tab, df,dict_df):
     #add filter button before card start
     component_filter,component_filter_js=return_component_filter(tab, df)
     component_filter=component_filter+"<hr/>"
-
-
 
     iframe=f"<iframe src='{return_string_gallery(tab)}' height='100%' width='100%'  style='margin-left=-50px !important; margin-right=-50px !important;'></iframe><hr/>"
 
@@ -606,9 +623,6 @@ def return_content_class(tab, df,dict_df):
     content= header+spacer+part_direct+spacer+part_inddirect+spacer
     return template.format(content=content ,
                            jsinclude=component_cy_js+component_filter_js)
-
-
-
 
 
 
@@ -736,10 +750,10 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
 
     user_journey_template = """
     <main id='main' data-forjourney="{}" data-forperspective="{}">
-      <nav class="section-nav mt-3" style="margin-right:20px;">
+      <nav class="section-nav" style="margin-right:20px;">
             <ol > {}</ol>
       </nav>
-    	<div class="mt-3" id="speechify_content" >
+    	<div class="p-0" id="speechify_content" >
     		""" + return_component_header(df=dict_df[tab], tab=tab, dict_df="", instance="", custom_header_text=f"{one_bm} {tab.replace('_',' ')}") + """
     		<p class="mb-5" ><p>
     		{}
@@ -771,6 +785,7 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
             if isinstance(a_user_process, str):
                 if len(a_user_process.split(",")) > 0:
                     navvalue_content=""
+                    #calculate
                     for process_counter, process in enumerate( a_user_process.split(",")):
                         process_display=process.replace(" ","_")
                         navvalue_content=navvalue_content+f'<li class=""><a href="#{process_display}">{process_display.replace("_"," ")}</a></li>'
@@ -778,11 +793,13 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
 
                     sectionvalue = ""
 
+
                     for process_counter, process in enumerate( a_user_process.split(",")):
                         label = f"{journey_counter+1}.{process_counter+1} "
                         process_display = process.replace(" ", "_")
                         link = f"<a href='../../page/{process_name.replace('For ','')}/{process.replace(' ', '_')}.html'>{label + process.replace('_', ' ')}</a>"
-                        image=f'<img class="journeyimg" src="../../attachments/MC2 Data-{process_name_without}_Attachment/{process.replace("_"," ")}_Process Flow.jpg" >'
+                        image= return_instance_img(instance=underscore_replacer(process), tab=process_name_without, imgclass="journeyimg")
+                        #image=f'<img class="journeyimg" src="../../attachments/MC2 Data-{process_name_without}_Attachment/{process.replace("_"," ")}_Process Flow.jpg" >'
 
                         #get summary of the process
                         df_process=dict_df[process_name.replace("For ","")]
@@ -792,7 +809,7 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
                             print(df_process)
                             print(journey_counter, key, process_counter, process)
                             summary=""
-                        sectionvalue = sectionvalue + f"<section id='{process_display}'><h4>{link}</h4>{image}{summary}</section>"
+                        sectionvalue = sectionvalue + f"<section id='{process_display}'><h2>{link}</h2>{image}{summary}</section>"
 
                 else:
                     navvalue = ""
@@ -816,9 +833,7 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
     return template.format(content=content, jsinclude="")
 
 
-
-
-
+#not used atm
 def return_component_filter(tab, df):
     template_filter="""<div class="dropdown"> <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" style="width:100%;"    data-bs-toggle="dropdown" aria-expanded="false">Select Direct Attribute</button>   <ul class="dropdown-menu" id='filter_ul' aria-labelledby="dropdownMenuButton">       {}    </ul>    </div>"""
     items=""
@@ -839,20 +854,21 @@ def return_component_filter(tab, df):
 
 
     indirect_class = """
-    <select class="form-select" aria-label="Default select example" id="indirect_class">
+    <select class="" aria-label="Default select example" id="indirect_class">
     <option selected>Select Indirect Attribute</option>
     </select>
     """
 
     indirect_attribute = """
-        <select class="form-select" aria-label="Default select example" id="indirect_attribute">
+        <select class="" aria-label="Default select example" id="indirect_attribute">
         </select>
         """
 
     return [template_filter.format(items),js_part]
 
+
 def return_template_dropdown(id, text ):
-    return """<select class="form-select" id='"""+id+"""'></select>"""
+    return """<select class="" id='"""+id+"""'></select>"""
 
 
 def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], height="height100", add_instance_label=""):
@@ -896,124 +912,7 @@ def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], h
     }
     """
 
-    js_partend = """
-
-      ],
-
-      style: [ // the stylesheet for the graph
-        {
-          selector: 'node',
-          style: {
-            'background-color': '#999',
-            'shape':'round-rectangle',
-            'label': 'data(label)',
-            'width': '90px',
-            'height': '50px',
-            'color': '#fff',
-            'text-halign': 'center',
-            'text-valign': 'center',
-            'text-wrap': 'wrap',
-            'text-max-width': "5px",
-            'text-overflow-wrap': "whitespace",
-          }
-        },
-        {
-          selector: '.red',
-          css: {
-            'background-color': 'red',
-            'line-color': 'red',
-            'z-index': 99999,
-          }
-        },
-        
-        {
-          selector: '.blue',
-          css: {
-            'background-color': '#0099ff',
-          }
-        },
-        
-        {
-          selector: 'edge.blue',
-          css: {
-            'line-color': 'red',
-          }
-        },
-        
-        {
-          selector: '.edge_default',
-          css: {
-            'line-color': '#eee',
-            'z-index':-1,
-          }
-        },
-
-
-        {
-          selector: 'edge',
-          style: {
-            'width': 4,
-            'target-arrow-color': '#ccc',
-            'target-arrow-shape': '',
-            'curve-style': 'bezier'
-          }
-        }
-      ],
-
-      layout: {
-        name: 'breadthfirst', 
-        spacingFactor: 0.85, 
-        avoidOverlap: true,
-        animate: true,
-        animationDuration: 1000,
-      },
-      ready: function(){
-        
-      }
-
-    });
-
-
-
-    //initialization
-    var current_class =get_current_class();
-    var current_class_attributes=return_attributes(current_class);
-    cy.$('edge').addClass('edge_default');
-    cy.$('"""+ ",".join(["#"+x for x in highlight_classes])+ """').addClass('blue');
-    if (current_class){traverse_to(current_class,current_class,cy);}
-  
-    
-    
-    
-    // right click even to jump to next page
-    cy.on('cxttap', 'node', function(){
-      try { // your browser may block popups
-        window.open( this.data('href') ,"_self");
-      } catch(e){ // fall back on url change
-        window.location.href = this.data('href');
-      }
-    }); 
-
-    // bind tapstart to edges and highlight the connected nodes
-    cy.bind('tapstart', 'edge', function(event) {
-      var connected = event.target.connectedNodes();
-      //connected.addClass('blue');
-    });
-
-
-    // bind tapend to edges and remove the highlight from the connected nodes
-    cy.bind('tapend', 'edge', function(event) {
-      var connected = event.target.connectedNodes();
-      //connected.removeClass('blue');
-    });
-    
-    // bind tapend to node and remove the highlight from the connected nodes
-    cy.bind('tapstart', 'node', function(event) { 
-    update_card_display(cy,event);  
-    });//end of binding
-    
-});//end of jquery.ready
-"""
+    js_partend = """"""
 
     chart_js = js_partstart + js_middle + js_partend
     #return [cy,f"<script>{chart_js}</script>"]
@@ -1068,11 +967,6 @@ def create_html():
             #quit and dirt solution to store it also as general user journey so that other pages can access this page
             with open(fr"page/{user_employee_journey}/{user_employee_journey}.html", "w", encoding="utf-8") as file:
                 file.write(str(result))
-
-
-
-
-
 
 
 if __name__ == '__main__':

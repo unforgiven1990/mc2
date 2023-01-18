@@ -3,6 +3,7 @@ var cy2;
 var dict_cy={};
 var page_class;
 var page_instance;
+var last_event;
 
 
 //general helper functions
@@ -10,14 +11,17 @@ function get_cy2() {
     return cy2;
 }
 
+//get page instance
 function get_page_instance() {
     return $("#header").attr("data-current_instance");
 }
 
+//get page class
 function get_page_class() {
     return $('#header').attr("data-current_class");
 }
 
+//replace word
 function space2underscore(word) {
     if (typeof(word)=="string"){
         return word.replaceAll(" ", "_");
@@ -26,6 +30,7 @@ function space2underscore(word) {
     }
 }
 
+//replace word
 function underscore2space(word) {
     if (typeof(word)=="string"){
         return word.replaceAll("_", " ");
@@ -34,6 +39,13 @@ function underscore2space(word) {
     }
 }
 
+//replace wprd
+function noforby(word) {
+    var result = word.replaceAll("For ", "").replaceAll("By ", "");
+    return result;
+}
+
+//check for nan, null
 function checkdata(value) {
     if (!value) {
         return false;
@@ -62,18 +74,9 @@ function checkdata(value) {
 }
 
 
-
-
-//general replace pandas function
-
-function noforby(word) {
-    var result = word.replaceAll("For ", "").replaceAll("By ", "");
-    return result;
-}
-
 //check if a given instance has its own url
 function get_instance_url(instance){
-    if( (instance =="null") || (instance  =="nan") || checkdata(instance) ==false ){
+    if( checkdata(instance) ==false ){
         return "";
     }
 
@@ -87,15 +90,11 @@ function get_instance_url(instance){
                 }
             });
         });
-
     });
     return result;
 }
 
-
-
-
-
+//get all classes
 function get_all_class() {
     var result = [];
     $.each(data, function(key, value) {
@@ -104,7 +103,7 @@ function get_all_class() {
     return result;
 }
 
-
+//get direct relations
 function get_related_class(tab){
 var result=new Set();
 var df=data[tab];
@@ -119,7 +118,22 @@ return [tab].concat(Array.from(result));
 }
 
 
+//return as label not as array
+function get_class_columns(class_tab) {
+    var df = data[class_tab]; //this will get df
+    var potential_result = []
+    $.each(df, function(key, value) {
+        var row = df[key]; //this will get first row
+        var new_result = Object.keys(row); //this gets column
+        if (new_result.length >= potential_result.length) {
+            potential_result = new_result;
+        }
+    });
+    return potential_result;
+}
 
+
+//get all instances of one class
 function get_all_instance(class_tab){
 var result=[];
 var df=data[class_tab];
@@ -147,26 +161,7 @@ function get_cell(df, index, col, tab) {
 }
 
 
-//return as label not as array
-function get_class_columns(class_tab) {
-    var df = data[class_tab]; //this will get df
-    var potential_result = []
-    $.each(df, function(key, value) {
-        var row = df[key]; //this will get first row
-        var new_result = Object.keys(row); //this gets column
-        if (new_result.length >= potential_result.length) {
-            potential_result = new_result;
-        }
-    });
-    return potential_result;
-}
-
-
-
-
-var last_event;
-
-
+//draw chart 2
 function update_chart2(){
     var event = window.last_event;
     var target_class=event.target.id();
@@ -176,24 +171,19 @@ function update_chart2(){
 }
 
 
-
+//draw chart in general
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
-
-
-   if(id=="cy"){
+    if(id=="cy"){
         var layout_style="cise";
-   }else{
-    var selected_layout= $("#layoutselect").val();
-    if (checkdata(selected_layout)){
-        var layout_style=selected_layout.replace(" layout", "");
     }else{
-        console.log("selected layout is ",selected_layout);
-        var layout_style="concentric";
+        var selected_layout= $("#layoutselect").val();
+        if (checkdata(selected_layout)){
+            var layout_style=selected_layout.replace(" layout", "");
+        }else{
+            console.log("selected layout is ",selected_layout);
+            var layout_style="concentric";
+        }
     }
-   }
-
-//cytoscapeCola(cytoscape);
-
 
 
     var cy = cytoscape({
@@ -296,6 +286,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     cy.$('#' + page_class).addClass('blue'); // make instance node blue
     cy.$('#' + page_instance).addClass('blue');
 
+    //add default class to edges
     cy.$('edge').addClass('edge_default');
     if (page_class != "index") {
         if (cy == "cy") {
@@ -304,16 +295,27 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     }
 
     //highlight the end node in instance chart
+
     $.each(cy.$('node'), function(key, val) {
         console.log("asdsadsa ",key,val.data());
         var node_data=val.data();
+        var lis=[];
         if(node_data["class"]=="highlight"){
             val.addClass("highlight");
+            lis.push("<li>"+underscore2space(node_data['id'])+"</li>");
+        }else{
+            //for chart 2 and 3
+            if (id!="cy"){
+                val.addClass("blue");
+            }
         }
+        $("#indirect_result").append(lis.join());
+
     });
 
 
-    // right click even to jump to next page
+
+    //right click even to jump to next page
     cy.on('cxttap', 'node', function() {
         try { // your browser may block popups
             window.open(this.data('href'), "_self");
@@ -322,12 +324,10 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
         }
     });
 
-
-    // bind tapstart to edges and highlight the connected nodes
+    //bind tapstart to edges and highlight the connected nodes
     cy.bind('tapstart', 'edge', function(event) {
         var connected = event.target.connectedNodes();
     });
-
 
     // bind tapend to edges and remove the highlight from the connected nodes
     cy.bind('tapend', 'edge', function(event) {
@@ -338,22 +338,15 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     if (id == "cy") {
         cy.bind('tapstart', 'node', function(event) {
             window.last_event=event;
+            $("#indirect_result").html("Indirect Results:");
             update_chart2();
-        }); //end of binding
 
+        }); //end of binding
     }else  if (id == "cy2"){
         cy.bind('tapstart', 'node', function(event) {
             //works
         }); //end of binding
     }
-
-
-
-
-    $.each(dict_cy, function(key, value) {
-        console.log("inbinding ",key," : " , value);
-      });
-
 
     dict_cy[id]=cy;
     return cy
@@ -369,7 +362,6 @@ function generate_class_elements(current_class, current_instance) {
     if (current_instance==""){
         all_class = get_related_class(current_class);
     }
-
 
     //calculate nodes
     $.each(all_class, function(key, val) {
@@ -418,16 +410,10 @@ function generate_class_elements(current_class, current_instance) {
                     }
                 }
             }
-
-
         });
     });
-
     return elements;
 }
-
-
-
 
 
 //generate instance network
@@ -440,6 +426,7 @@ function generate_instance_elements(current_class, target_class, highlight_class
         root: "#" + current_class,
         goal: "#" + target_class
     });
+
     var all_traversed_nodes = aStar.path;
     var cleared_path=[];
     for (var i = 0; i < all_traversed_nodes.length; i++) {
@@ -468,79 +455,23 @@ function generate_instance_elements(current_class, target_class, highlight_class
         }
     });
 
-
     //first node
     var first_target_class = get_target_class(current_class, cleared_path);
     var a_nodes=[{source_class:page_class, target_class:first_target_class, source_instance:page_instance}];
     var elements=rekursive_traverse(a_nodes=a_nodes,cleared_path=cleared_path);
-    //big split here, if we split here we use option 1, else option2
-    $.each(elements, function(key, testentry) {
-        console.log("elements: ", testentry);
-    });
 
+
+    //first node
     elements.push({
         data: {
             'id': current_instance,
-            'label': current_class+" =\n"+underscore2space(current_instance),
+            'label': underscore2space(current_class)+" =\n"+underscore2space(current_instance),
             'href': "../../page/" + current_class + "/" + current_instance + ".html"
 
         }
     });
 
     return elements;
-
-
-
-    $.each(cleared_path, function(key, target_node) { //1. go through all traversed classes =  tab
-        var target_class = target_node;
-
-        //there is this traverse bug where the same class is calculated again via connected nodes
-        if (target_class == current_class) {
-            return;
-        }
-
-        //2. find list of current class =index to traversed class
-        //console.log(source_class,", ", target_class);
-        var cell_data_or_array = get_cell(df = data[source_class], index = source_instance, col = target_class, tab = source_class);
-        console.log("1. ", source_class, " -> 2. ", target_class, " -> 3. ", source_instance, " found 4. ", cell_data_or_array);
-
-
-        //add node and edges to found data if found
-        if (cell_data_or_array) {
-            var item_array = cell_data_or_array.split(",");
-            $.each(item_array, function(key, found_instance) {
-                //push node
-                found_instance_node_list.push({
-                    data: {
-                        'id': found_instance,
-                        'label': current_class+": "+underscore2space(found_instance),
-                        'href': "../../page/" + found_instance + "/" + found_instance + ".html"
-                    }
-                });
-
-
-                //push edge
-                found_instance_edge_list.push({
-                    data: {
-                        'id': source_instance + found_instance,
-                        'source': space2underscore(source_instance),
-                        'target': space2underscore(found_instance)
-                    }
-                });
-                //found_instance_node_list.push("fu");
-                //console.log("resultasdsad is ",found_instance_node_list);
-            });
-        }
-
-        //prepare for next edge, always do
-        source_class = target_class;
-
-    });
-
-
-
-    return found_instance_node_list.concat(found_instance_edge_list);
-
 }
 
 
@@ -550,25 +481,6 @@ function generate_instance_elements(current_class, target_class, highlight_class
 //2. find all untraversed nodes, and continue rekursive_traverse(sad)
 //3. starting position of untraversed noes = current_class & current_instance
 //4. result is a list of nodes + their connected edges in form of elements
-//
-
-/**
- * input a_node = [{instance:'', source_class:'', target_class''}]
- * input path = path of stuff [[source_class,target_class],[source_class, targetclass], ...]
- *
- * output [{node},{edge},{node}]
- *
- *                  {
-                    data: {
-                        'id': found_instance,
-                        'label': underscore2space(found_instance),
-                        'href': "../../page/" + found_instance + "/" + found_instance + ".html"
-                    }
-
- */
-
-
-
 function get_target_class(current_class, cleared_path){
     var helper_index;
     var result=-1;
@@ -586,7 +498,6 @@ function get_target_class(current_class, cleared_path){
             //console.log(traversed_node," botvs  ",current_class, "index is ",index);
         }
     });
-
 return result;//not found current_node in path, which is strange,should not happen
 }
 
@@ -624,12 +535,10 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             return [];
         }
 
-
+        // the node has children but user doesnt want to see it. potential bug
         if (target_class==-1){
             console.log("section 3.2 ", a_nodes, a_nodes.length, came);
-            return []; // the node has children but user doesnt want to see it. potential bug
-        }
-
+            return [];  }
 
         //initialize for rekursion
         var next_a_nodes=[];//array instance name, tab, class
@@ -646,7 +555,6 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             cell_data="";
         }
 
-
         //traverse thorugh all results to see comma items
         $.each(cell_data.split(","), function(cell_index, cell_content) {
 
@@ -659,9 +567,6 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             var next_target_class = get_target_class(source_class=target_class, cleared_path=cleared_path);
             next_a_nodes.push({source_class:target_class, target_class:next_target_class, source_instance:cell_content});
 
-
-
-            console.log("clear",cleared_path[cleared_path.length-1]);
             //add class for the last element in instance chart
             if(source_class==cleared_path[cleared_path.length-1]){
                 var highlightornot='highlight';
@@ -679,10 +584,8 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
                 }
             };
 
-
             //add to array
             found_instance_for_cy.push(one_found_node);
-
 
             //result for cy edges
             var one_found_edge={
@@ -693,9 +596,7 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
                 }
             };
             found_edge_for_cy.push(one_found_edge);
-
         });
-
 
         var found_together=found_instance_for_cy.concat(found_edge_for_cy);
 
@@ -703,17 +604,15 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
         //specific: if their target_class==-1(not in path) or i
         console.log("section 3.3 ", a_nodes, a_nodes.length, came, next_a_nodes);
         return found_together.concat(rekursive_traverse(a_nodes=next_a_nodes, cleared_path=cleared_path , came="3.3"));
-
     }
-
 }
 
 
-
-
+//traverse to nodes
 var selected_destination_class = '';
 function traverse_to(start_node, end_node, cy) {
 
+    //prepare to traverse in aStar
     selected_destination_class = end_node;
     var friking_elements = cy.elements();
     var aStar = friking_elements.aStar({
@@ -729,19 +628,18 @@ function traverse_to(start_node, end_node, cy) {
         node_class.addClass('blue');
     });
 
+    //adjust color
     var last = traverse_nodes[traverse_nodes.length - 1];
     last.addClass('red').removeClass('blue');
-
     $.each(aStar.path, function(edge_key, edge_obj) {
         edge_obj.addClass('blue').removeClass('edge_default');
     });
 
-    //update_class_display();
     return traverse_nodes;
 }
 
 
-
+//update select by option
 function update_select(select_id, options){
     var final_lis='';
     $.each(options, function(index, val) {
@@ -756,235 +654,184 @@ function update_select(select_id, options){
     $(select_id).html(final_lis);
 }
 
+//create lis with ul
 function produce_lis(a_lis){
-var ul="";
-var lis="";
-
+    var ul="";
+    var lis="";
     $.each(a_lis, function(index, item) {
     var li=produce_li_for_word("",item);
     lis=lis+li;
     });
-
 return "<ul>"+lis+"</ul>";
 }
 
-
+//produce individual lis
 function produce_li_for_word(row_index,cell_data){
     var url = get_instance_url(cell_data);
     var dot = row_index!="" ? ": ": "";
     row_index=row_index.replace("_", " ");
     if (url !=''){
-        var li="<li>"+row_index+dot+"<a href='"+url+"'>"+underscore2space(cell_data)+"</a></li>";
+        var li="<li class='noli'>"+row_index+dot+"<a href='"+url+"'>"+underscore2space(cell_data)+"</a></li>";
     }else{
-        var li="<li>"+row_index+dot+""+underscore2space(cell_data)+"</li>";
+        var li="<li class='noli'>"+row_index+dot+""+underscore2space(cell_data)+"</li>";
     }
     return li;
 }
 
+//display left or right side list
 function display_instance_attribute_aslist(instance,instance_class){
     var df=data[instance_class];
     var lis="";
-        $.each(df, function(df_index, row) {
-            if(row[instance_class]==instance){
-                $.each(row, function(row_index, cell_data) {
-                    console.log(cell_data, typeof(cell_data));
-                    var result_display;// result can belink, can be <a></a>
-                    if (checkdata(cell_data)==false){// not string at all
-                        //lis=lis+produce_li_for_word(row_index, cell_data);
-                    }else if (row_index == "MC2 Link" || row_index == "Process Flow" || row_index == instance_class){
+    var tds='';
+    $.each(df, function(df_index, row) {
+        if(row[instance_class]==instance){
+            $.each(row, function(row_index, cell_data) {
+                console.log(cell_data, typeof(cell_data));
+                var result_display;// result can belink, can be <a></a>
+                if (checkdata(cell_data)==false){// not string at all
+                    //lis=lis+produce_li_for_word(row_index, cell_data);
+                }else if (row_index == "MC2 Link" || row_index == "Process Flow" || row_index == instance_class){
 
-                    }else if (cell_data.includes(",")){//string with multiple items
-                        lis=lis+"<li>"+row_index.replace("_"," ")+": "+produce_lis(cell_data.split(","))+"</li>";
-                    }else{//string but with only one item
-                        lis=lis+produce_li_for_word(row_index,cell_data);
-                    }
+                }else if(typeof(cell_data)=="string"){
 
-                });
-            }
-        });
-        var ul="<ul>"+lis+"</ul>";
+                    tds=tds+'<tr><td class="labeltd" >'+row_index.replace("_", " ")+'</td>' +'<td>'+produce_lis(cell_data.split(","))+'</td></tr>'
 
-    return ul ;
+
+
+
+
+
+
+                }
+
+            });
+        }
+    });
+
+    if (tds==""){
+
+        return "<p> there is no direct data for this entry </p>"
+    }
+
+    //old ul with row
+    var ul="<ul>"+lis+"</ul>";
+    var ul=`<table class="table">    <tbody> ${tds}   </tbody>  </table>`;
+    return ul;
 }
 
+
+
+
+
+
+//create all layouts
 function get_layout_options(){
-var result=["dagre layout", "breadthfirst layout", "cose layout", "cise layout",  "concentric layout","circle layout"];
-return result;
+    return ["dagre layout", "breadthfirst layout", "cose layout", "cise layout",  "concentric layout","circle layout"];
 }
-
-
-
-
-function update_nav(){
-
-}
-
-
-
-
-
-
-
-
 
 //only used for user journey page
- window.addEventListener('DOMContentLoaded', function(){
-	const observer = new IntersectionObserver(function(entries) {
-		entries.forEach(function(entry) {
-			const id = entry.target.getAttribute('id');
-			if (entry.intersectionRatio > 0) {
-			    document.querySelector(`nav li a[href="#${id}"]`).parentElement.classList.add('active');
-			} else {
-				document.querySelector(`nav li a[href="#${id}"]`).parentElement.classList.remove('active');
-			}
-		});
-	});
-
-	// Track all sections that have an `id` applied
-	document.querySelectorAll('section[id]').forEach(function(section)  {
-		observer.observe(section);
-	});
-});
-
-
-
-
-
-     /*  add speechify for wiki
-    import(
-      "https://storage.googleapis.com/speechify-api-cdn/speechifyapi.min.mjs"
-    ).then(async (speechifyWidget) => {
-      // this parent element for your article or listenable content
-      const articleRootElement = document.querySelector("#speechify_content");
-      // this is the header of your article; the inline player will be placed under this heading
-      const articleHeading = articleRootElement.querySelector("h2");
-
-      const widget = speechifyWidget.makeSpeechifyExperience({
-        rootElement: articleRootElement,
-        inlinePlayerElement: articleHeading,
-      });
-      await widget.mount();
+window.addEventListener('DOMContentLoaded', function(){
+const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+        const id = entry.target.getAttribute('id');
+        if (entry.intersectionRatio > 0) {
+            document.querySelector(`nav li a[href="#${id}"]`).parentElement.classList.add('active');
+        } else {
+            document.querySelector(`nav li a[href="#${id}"]`).parentElement.classList.remove('active');
+        }
     });
-*/
+});
+
+// Track all sections that have an `id` applied
+document.querySelectorAll('section[id]').forEach(function(section)  {
+    observer.observe(section);
+});
+});
 
 
+//update country select
 function update_select_country(){
-var options='';//list of all available countries
-var countries=get_all_instance("Country");
-$.each(countries, function(row_index, country) {
-options=options+'<option value="'+country+'" >'+country+'</option>'
-});
- $("#select_country").html(options);
+    var options='';//list of all available countries
+    var countries=get_all_instance("Country");
+    $.each(countries, function(row_index, country) {
+    options=options+'<option value="'+country+'" >'+country+'</option>'
+    });
+    $("#select_country").html(options);
 }
 
-
+//update business mode select
 function update_select_business(){
-var options='';//list of all available countries
-var businesses=get_all_instance("Business_Model");
+    var options='';//list of all available countries
+    var businesses=get_all_instance("Business_Model");
+    $.each(businesses, function(row_index, business) {
+        options=options+'<option value="'+business+'" >'+business+'</option>'
+    });
+    $("#select_business").html(options);
 
-$.each(businesses, function(row_index, business) {
-
-options=options+'<option value="'+business+'" >'+business+'</option>'
-});
- $("#select_business").html(options);
-
-
-
- //select the one of the current page
- var selected_bm= $("#main").data("forjourney");
- $("#select_business").val(selected_bm);
-
-
-
-
-
+    //select the one of the current page
+    var selected_bm= $("#main").data("forjourney");
+    $("#select_business").val(selected_bm);
 }
 
-
+//update user view or employee perspective select
 function update_select_perspective(){
- $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Employee_Journey">Employee Perspective</option>');
+    $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Employee_Journey">Employee Perspective</option>');
 
- var selected_persp= $("#main").data("forperspective");
- $("#select_perspective").val(selected_persp);
+    var selected_persp= $("#main").data("forperspective");
+    $("#select_perspective").val(selected_persp);
 
 }
 
 
+//update business model options
 function update_bm_options(){
-var selected_country=$('#select_country').val();
+    var selected_country=$('#select_country').val();
 
-//provide only business model denmark can select
-df_country=data["Country"];
-var allowed_bm=get_cell(df=df_country, index=selected_country, col="Business_Model", tab="Country");
-var new_options="";
+    //provide only business model denmark can select
+    df_country=data["Country"];
+    var allowed_bm=get_cell(df=df_country, index=selected_country, col="Business_Model", tab="Country");
+    var new_options="";
 
-$.each(allowed_bm.split(","), function(index, val) {
-    new_options=new_options+"<option value='"+val+"'>"+val+"</option>"
-});
-
-$("#select_business").html(new_options);
+    $.each(allowed_bm.split(","), function(index, val) {
+        new_options=new_options+"<option value='"+val+"'>"+val+"</option>"
+    });
+    $("#select_business").html(new_options);
 }
 
 
+//switch user journet to other user journey
 function jump_to_journey(){
     var selected_bm=$('#select_business').val();
     var selected_perspective=$('#select_perspective').val();
-
     var url = "../"+selected_perspective+"/"+selected_perspective+"_"+selected_bm+".html";
     $(location).attr('href',url);
 }
 
 
-
+//main function
 $(document).ready(function() {
 
+    //initialize
     page_class = get_page_class();
     page_instance = get_page_instance();
-
-
-    //calibrate for user journey page
-    update_select_country();
     update_select_business();
     update_select_perspective();
-
-
-    $('#select_country').change(function(){
-        update_bm_options();
-    });
-
-
     $('#select_business, #select_perspective').change(function(){
         jump_to_journey();
     });
 
 
-
     //initialization filter class and instance to allow dropdown to be selected
-    //get all vailable tabs
     update_select("#filter_class",get_all_class());
     update_select("#layoutselect", get_layout_options());
 
-    $('#fullscreen_button').click(function(){
-        $("#modal").modal("show");
-        //$('#modal_body').empty();
-        //$('#cy2').clone().appendTo('#modal_body');
-    });
-
-    $('#modal_close').click(function(){
-        $("#modal").modal("hide");
-        //$('#modal_body').empty();
-        //$('#cy2').clone().appendTo('#modal_body');
-    });
-
+    //modal show and hide
+    $('#fullscreen_button').click(function(){         $("#modal").modal("show");});
+    $('#modal_close').click(function(){        $("#modal").modal("hide");    });
+    
     $('#layoutselect').change(function(){
         var selected_layout = $('#layoutselect').val();
-
         update_chart2();
-
-
-
-
-
     });
 
     $('#filter_class').change(function(){
@@ -993,236 +840,38 @@ $(document).ready(function() {
         $("#versus").empty();
         update_select("#filter_instance",["Specify "+selected_class].concat(all_instances));
     });
+
     //select the current class
     $('#filter_class').val(page_class).change();
 
      $('#filter_instance').change(function(){
         var selected_instance = $('#filter_instance').val();
         var selected_class = $('#filter_class').val();
-        var ul= display_instance_attribute_aslist(instance=selected_instance,instance_class=selected_class);
+        var ul= display_instance_attribute_aslist(instance=selected_instance,instance_class=selected_class);    
         $('#versus').html(ul);
     });
 
-
+    //update the left side
     var ul= display_instance_attribute_aslist(instance=page_instance,instance_class=page_class);
     $('#left_direct').html(ul);
-
-
 
 
 
     if (page_class == "index") { //index page
         cy = create_cy(id = "cy", current_class = '', current_instance = '', elements = generate_class_elements(page_class, page_instance));
         cy.$('node').addClass('blue'); //highlight and make all nodes blue
-
     } else if (checkdata(page_class) && checkdata(page_instance)) { //instance page
         cy = create_cy(id = "cy", current_class = page_class, current_instance = page_instance, elements = generate_class_elements(page_class, page_instance));
-
     } else if (page_class != "" && page_instance == "") { // class page
-
-        if ($("#cy").length > 0){
+        if ($("#cy").length > 0){//if this chart exists
             cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
-
           }
-
-
     }
-
-
 
     //only for user journey
     $(window).on('scroll', () => {
-      // after scroll is finished, we can update li
       update_nav();
     })
 
 
-
-
-
-
-
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- *
- *
- * //update instance display
-    //1. for each instance of the current class
-    $('.card').each(function(i, obj) {
-        if (i > 0) {}
-
-        var card_instance = $(this).attr("id");
-        var found_instances = {};
-        var starting_class = current_class; // is row ,left side of the table
-        var starting_instance = card_instance;
-
-        //2. traverse through their connected instances via precalculated classes they are connected to
-        $.each(traverse_nodes, function(node_key, goal_class) {
-            if (goal_class.id() == current_class) {
-                return;
-            } else {
-
-            }
-            //console.log("step2: ", starting_class," instance ", starting_instance," -> " , goal_class.id());
-
-            var df = data[starting_class] // df compared to python
-
-            //3. find the current df and go through each row of current df to find the current instance
-            $.each(df, function(index, row) {
-
-
-                //this row has no index element
-                if (row[starting_class] === "undefined") {
-                    return;
-                }
-                if (row[starting_class] === undefined) {
-                    return;
-                }
-                if (row[starting_class] === null) {
-                    return;
-                }
-                if (row[starting_class] == null) {
-                    return;
-                }
-                if (!row[starting_class]) {
-                    return;
-                }
-
-
-                //console.log("step4: ", row[starting_class].replaceAll(" ","_"), ", ",starting_instance.replaceAll(" ","_"));
-
-                //4. found the current instance row where starting_instance is the index column
-                if (row[starting_class].replaceAll(" ", "_").includes(starting_instance.replaceAll(" ", "_"))) {
-                    //console.log(card_instance,": ", starting_class,": ",goal_class.id(),": ", index,": ", row);
-                    //console.log("found ",);
-
-                    //find the potential goal column For or By
-                    var For_goal_class = "For " + goal_class.id();
-                    var By_goal_class = "By " + goal_class.id();
-
-
-                    var found = 0; //0 means not found , 1 means For, 2 means By
-                    if (Object.keys(row).includes(For_goal_class)) {
-                        found = 1;
-                        var found_instance = row[For_goal_class];
-                    } else if (Object.keys(row).includes(By_goal_class)) {
-                        found = 2;
-                        var found_instance = row[By_goal_class];
-                    } else {
-                        found = 3;
-                        //console.log("BUG ",Object.keys(row), ", " ,By_goal_class, ", ",For_goal_class );
-                    }
-
-                    if (found_instance == null) {
-                        return;
-                    }
-
-                    //check if found is weird if it is not found, should not happen
-                    if (found != 3) {
-                        //5. add instance to the found instances
-                        //will be very difficult if it is multiple instances
-                        //for now, lets consider only the first instance
-                        //console.log("step5: found ",goal_class.id(), found_instance);
-                        //console.log("step5: found ",goal_class.id(), found_instance.split(",")[0]);
-
-                        found_instances[goal_class.id()] = found_instance.split(",")[0];
-                        starting_instance = found_instance.split(",")[0]; // next step visit from this items perspective
-                    } else {
-                        //should not happen in theory
-                        //alert("bug");
-                    }
-                } else {}
-            });
-
-            // set starting node as already traversed node
-            starting_class = goal_class.id();
-        });
-
-        $('#' + card_instance + "_ul").empty(); //clean up previous content
-
-        //step 6
-        $.each(found_instances, function(found_class, found_instance) {
-            //console.log("step6: create li ",found_class);
-            $('#' + card_instance + "_ul").append($('<li>', {
-                text: found_class + ": " + found_instance
-            })); //end of add card
-        });
-
-    }); //end of step 1 for each loop
-
-
-
-
-
-    function update_class_filter_options() {
-    //when a destination node is selected, change a different filter to display on class html
-    //go to the destination class and provide display options
-
-    // part 1 direct attributes
-    var current_class = get_page_class();
-    var direct_lis = '<h6 class="dropdown-header">' + current_class + ' Attributes</h6>'
-    var direct_attributes = get_class_columns(current_class);
-    $.each(direct_attributes, function(index, val) {
-
-        if (val == current_class) {
-            return;
-        }
-        var direct_li = '<li class="dropdown-item"><div class="form-check">  <input class="form-check-input big-checkbox" type="checkbox" value="' + val.replace(" ", "_") + '_filter" id="' + val.replace(" ", "_") + '_filter" checked /><label class="form-check-label" for="' + val.replace(" ", "_") + '_filter">&nbsp; ' + val.replace(" ", "_") + '</label></div></li>'
-        direct_lis = direct_lis + direct_li;
-    });
-
-
-    //part 2 indirect attributes
-    var indirect_lis = '<h6 class="dropdown-header">' + selected_destination_class + ' Attributes</h6>'
-    var indirect_attributes = get_class_columns(selected_destination_class);
-    $.each(indirect_attributes, function(index, val) {
-        if (val.includes("For ")) {
-            return;
-        }
-        if (val.includes("By ")) {
-            return;
-        }
-        var indirect_li = '<li class="dropdown-item"><div class="form-check">  <input class="form-check-input big-checkbox" type="checkbox" value="' + val.replace(" ", "_") + '_filter" id="' + val.replace(" ", "_") + '_filter" checked /><label class="form-check-label" for="' + val.replace(" ", "_") + '_filter">&nbsp; ' + val.replace(" ", "_") + '</label></div></li>'
-        indirect_lis = indirect_lis + indirect_li;
-    });
-
-    //if destination class is same as current class, then dont display indirect attributes
-    if (current_class == selected_destination_class) {
-        var final_lis = direct_lis;
-    } else {
-        var final_lis = direct_lis + '<div class="dropdown-divider"></div>' + indirect_lis;
-    }
-
-    $("#filter_ul").html(final_lis); // replaces inner tag and their old data with new data
-    $("#dropdownMenuButton").text('Select ' + selected_destination_class + ' Attribute'); // replaces inner tag and their old data with new data
-}
-
-
-
-
-
-function reminder(class_tab) {
-    var df = data[class_tab]; //this will get df
-    var row = df[0]; //this will get first row
-    var columns = Object.keys(row); //this gets column
-    return columns;
-}
-
-
- */
