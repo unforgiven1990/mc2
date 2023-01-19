@@ -171,6 +171,14 @@ function update_chart2(){
 }
 
 
+//draw chart 2
+function update_chart2_butnotdraw(target_class){
+    var traverse_nodes = traverse_to(page_class, target_class, dict_cy["cy"]);
+    dict_cy["cy2"]=create_cy(id = "cy2", current_class = page_class, current_instance = page_instance,  elements = generate_instance_elements(page_class, target_class , highlight_class=target_class));
+    dict_cy["cy3"]=create_cy(id = "cy3", current_class = page_class, current_instance = page_instance,  elements = generate_instance_elements(page_class, target_class, highlight_class=target_class));
+}
+
+
 //draw chart in general
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
     if(id=="cy"){
@@ -270,7 +278,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             refresh:2000,
             animate: true,
             nodeDimensionsIncludeLabels: true,
-            idealInterClusterEdgeLengthCoefficient: 0.95,
+            idealInterClusterEdgeLengthCoefficient: 1.15,
             nodeRepulsion: 50000,
         },
         ready: function() {
@@ -303,13 +311,16 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
         if(node_data["class"]=="highlight"){
             val.addClass("highlight");
             lis.push("<li>"+underscore2space(node_data['id'])+"</li>");
+            if (id=="cy2"){
+                $("#indirect_result").append(produce_lis([node_data['id']]));
+            }
         }else{
             //for chart 2 and 3
             if (id!="cy"){
                 val.addClass("blue");
             }
         }
-        $("#indirect_result").append(lis.join());
+
 
     });
 
@@ -678,10 +689,10 @@ function produce_li_for_word(row_index,cell_data){
     return li;
 }
 
-//display left or right side list
+
+//only calculates the table, that shall be displayed
 function display_instance_attribute_aslist(instance,instance_class){
     var df=data[instance_class];
-    var lis="";
     var tds='';
     $.each(df, function(df_index, row) {
         if(row[instance_class]==instance){
@@ -691,35 +702,74 @@ function display_instance_attribute_aslist(instance,instance_class){
                 if (checkdata(cell_data)==false){// not string at all
                     //lis=lis+produce_li_for_word(row_index, cell_data);
                 }else if (row_index == "MC2 Link" || row_index == "Process Flow" || row_index == instance_class){
-
+                    //do nothing, dont show these labels and data
                 }else if(typeof(cell_data)=="string"){
-
-                    tds=tds+'<tr><td class="labeltd" >'+row_index.replace("_", " ")+'</td>' +'<td>'+produce_lis(cell_data.split(","))+'</td></tr>'
-
-
-
-
-
-
-
+                    tds=tds+'<tr><td class="labeltd" >'+row_index.replace("_", " ")+'</td>' +'<td>'+produce_lis(cell_data.split(","))+'</td></tr>';
                 }
-
             });
         }
     });
 
     if (tds==""){
-
         return "<p> there is no direct data for this entry </p>"
     }
 
     //old ul with row
-    var ul="<ul>"+lis+"</ul>";
     var ul=`<table class="table">    <tbody> ${tds}   </tbody>  </table>`;
-    return ul;
+    return tds;
 }
 
 
+
+function display_instance_indirect_attribute_aslist(instance,instance_class){
+var predefined_classes=$("#predefined_relations").data("predefined_relations");
+var a_classes=predefined_classes.split(",");
+console.log("sdaasdasdsadsad "+a_classes);
+var tds;
+
+//this class has no predefined classes
+if(checkdata(a_classes[0])==false){
+    return "";
+}
+
+$.each(a_classes, function(index, predef_class) {
+    var a_result=[];// a results is displayed as each individual instance
+
+    //for each predefined class, calculate the shortest path
+    //go to the instance chart and calculate all instances
+    // get all leaves of it, and display it as calculated variable
+
+    //calculate instances of the general path
+    // the result format can be directly put int cy json
+    console.log("wtf "+predef_class);
+    var instance_elements = generate_instance_elements(current_class=page_class, target_class=predef_class, highlight_class=predef_class);
+
+    //get highlight the leaf instances.
+    $.each(instance_elements, function(index, instance_val) {
+        //check if instance is highlighted, if yes, it means it is a destination node
+        var node_data=instance_val["data"];
+        if(node_data["class"]=="highlight"){//remove double entry
+            if(!a_result.includes(node_data["id"])){
+                a_result.push(node_data["id"]);
+            }
+        }
+    });
+
+    //display them as table in direct relations
+    if ( a_result.length == 0) {
+        //pass
+    }else{
+        tds=tds+'<tr><td class="labeltd" >'+predef_class.replace("_", " ")+' <div class="text-muted">(calculated)</div></td>' +'<td>'+produce_lis(a_result)+'</td></tr>';
+        console.log("predef_class "+predef_class);
+    }
+
+
+});
+
+    //var ul=`<table class="table">    <tbody> ${tds}   </tbody>  </table>`;
+    return tds;
+
+}
 
 
 
@@ -828,7 +878,7 @@ $(document).ready(function() {
     //modal show and hide
     $('#fullscreen_button').click(function(){         $("#modal").modal("show");});
     $('#modal_close').click(function(){        $("#modal").modal("hide");    });
-    
+
     $('#layoutselect').change(function(){
         var selected_layout = $('#layoutselect').val();
         update_chart2();
@@ -847,16 +897,13 @@ $(document).ready(function() {
      $('#filter_instance').change(function(){
         var selected_instance = $('#filter_instance').val();
         var selected_class = $('#filter_class').val();
-        var ul= display_instance_attribute_aslist(instance=selected_instance,instance_class=selected_class);    
+        var tds= display_instance_attribute_aslist(instance=selected_instance,instance_class=selected_class);
+        var ul=`<table class="table">    <tbody> ${tds}   </tbody>  </table>`;
         $('#versus').html(ul);
     });
 
-    //update the left side
-    var ul= display_instance_attribute_aslist(instance=page_instance,instance_class=page_class);
-    $('#left_direct').html(ul);
 
-
-
+    //create cy
     if (page_class == "index") { //index page
         cy = create_cy(id = "cy", current_class = '', current_instance = '', elements = generate_class_elements(page_class, page_instance));
         cy.$('node').addClass('blue'); //highlight and make all nodes blue
@@ -867,6 +914,18 @@ $(document).ready(function() {
             cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
           }
     }
+
+    //update the left side
+    //needs to be after cy has created
+    var ul_direct= display_instance_attribute_aslist(instance=page_instance,instance_class=page_class);
+    var ul_indirect= display_instance_indirect_attribute_aslist(instance=page_instance, instance_class = page_class);
+    var ul='<table class="table"><tbody>'+ ul_direct+  ul_indirect+'</tbody></table>';
+    $('#left_direct').html(ul);
+    //some operational bug that creates undefined word before the table
+    $("#left_direct").contents().filter(function(){
+        return (this.nodeType == 3);
+    }).remove();
+
 
     //only for user journey
     $(window).on('scroll', () => {

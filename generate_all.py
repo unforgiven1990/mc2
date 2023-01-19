@@ -107,6 +107,7 @@ def cleanup(dict_df):
                      ":":'',
                      ")":'',
                      "(":'',
+                     "  ": ' ',# replaced in this order, first remove double space, then replace to underscore
                      " ":'_', #still empty space in tab data not converted
                      }
 
@@ -128,6 +129,7 @@ def cleanup(dict_df):
             correct_item=copied_index_item # starting position
             for forbidden_char, toreplace in forbidden_chars.items():
                 try:
+                    correct_item = " ".join(correct_item.split()) #doing this removes double space in titles
                     correct_item=correct_item.replace(forbidden_char,toreplace)
                 except:
                     correct_item=correct_item
@@ -161,10 +163,11 @@ def return_string_gallery(word):
         "System":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblkrJ6NVdCbc10a&view=vewmLZijxy",
         "Strategy": "https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbleijKoxmfs8WXB&view=vewZfdR1ir",
         "City":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblVk7GzlSl7A3fK&view=vewppJl3ro",
+        "KnowHow":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl2nnVvMNfVLxWB&view=vewxRkGmvV",
         "Car":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIjUl8dRCbolCI&view=vewEEtBGbz",
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vew2GwzJXf",
         "Business_Model":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
-        "Business_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
+        "Department_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
         "User_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblAyuTuEKVVVrZ3&view=vewBZ5BYQK",
         "Employee_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblgDQkj9F2O3XSd&view=vewxV21Rjf",
         "Country":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblDmXtQ5JPySoUz&view=vewrnTjfGP",
@@ -173,6 +176,34 @@ def return_string_gallery(word):
     return dict_gallery[word]
 
 
+def return_string_indirect(word):
+    """returns a fa icon"""
+    dict_gallery={
+        "Departments": [],
+        "Department": [ "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
+        "Department_Class": ["Employee", "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
+        "Leader": [],
+        "Employee": [ "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "System"],
+        "Role": [ "User_Process", "KPI", "KnowHow", "Capability", "System"],
+        "User_Process":["Role","KPI"],
+        "Employee_Process": ["Department", "Department_Class", "Employee","User_Journey"],
+        "Capability": ["Department","Department_Class", "Role", "Employee"],
+        "System": ["Department","Department_Class", "Role", "Employee"],
+        "Value": [],
+        "People": [],
+        "Strategy": [],
+        "City": [],
+        "KnowHow": ["Department","Department_Class", "Role", "Employee"],
+        "Car": [],
+        "KPI": ["Department","Department_Class", "Role", "Employee"],
+        "Business_Model": ["Department","Department_Class", "Role", "Employee"],
+        "User_Journey": ["Department","Department_Class", "Role", "Employee"],
+        "Employee_Journey": ["Department","Department_Class", "Role", "Employee"],
+        "Country": [],
+        "Others": [],
+    }
+    return dict_gallery[word]
+
 
 def return_string_icon(word):
     """returns a fa icon"""
@@ -180,7 +211,7 @@ def return_string_icon(word):
         "Departments": "fa-sitemap",
         "L1_Department":"fa-folder-tree",
         "Department":"fa-folder-tree",
-        "Business_Class":"fa-sitemap",
+        "Department_Class":"fa-sitemap",
         "L2_Department":"fa-folder-tree",
         "L3_Department":"fa-folder-tree",
         "Leader":"fa-user-tie",
@@ -195,6 +226,7 @@ def return_string_icon(word):
         "People": "fa-users",
         "Strategy": "fa-compass",
         "City":"fa-location-dot",
+        "KnowHow":"fa-lightbulb",
         "Car":"fa-car",
         "KPI":"fa-chart-simple",
         "Business_Model":"fa-money-bill",
@@ -212,7 +244,7 @@ def return_string_component(word):
         "Departments": "",
         "L1_Department":"This view shows you what L1 department exists that are relevant for EB.",
         "Department":"This view shows you what L1 department exists that are relevant for EB.",
-        "Business_Class":"This view is to show high level abstrac classes aggregated by many departments",
+        "Department_Class":"This view is to show high level abstrac classes aggregated by many departments",
         "L2_Department":"This view shows you what L2 departments under European Business.",
         "L3_Department":"This view shows you what L3 departments under European Business.",
         "Leader":"This summary shows who are the department leaders and what do they lead.",
@@ -228,6 +260,7 @@ def return_string_component(word):
         "KPI": "This view lists all relevant KPIs for their processes.",
         "Strategy": "This view shows what high level Strategies exists and which Processes implements these Strategies.",
         "City":"The location view shows what infrastructure is there and which employee is here.",
+        "KnowHow":"What Other Companies are doing, how NIO china is doing, what experiences we have learned",
         "Car":"What model exists for different country and business model",
         "Business_Model":"The location view shows what form of ownership user can have.",
         "User_Journey": f"<select id='select_business'></select><select id='select_perspective'></select>",
@@ -242,7 +275,7 @@ def return_string_editurl(word):
     """returns a fa icon"""
     dict_url={
         "Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxOzBlxXbfgFi&view=vewgFkOi9f",
-        "Business_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbltmeBARSbQIJxN&view=vewN8BQVGq",
+        "Department_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbltmeBARSbQIJxN&view=vewN8BQVGq",
         "L1_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxOzBlxXbfgFi&view=vewgFkOi9f",
         "L2_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblcnQTN78GEt3nR&view=vewjua7iRe",
         "L3_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxoLGbBcp1yUZ&view=vew8hBjN9a",
@@ -256,6 +289,7 @@ def return_string_editurl(word):
         "Value":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIoyKb5UMTmu09&view=vewRvuZf3B",
         "Strategy": "https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbleijKoxmfs8WXB&view=vewj6vLShZ",
         "City":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblVk7GzlSl7A3fK&view=vewppJl3ro",
+        "KnowHow":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl2nnVvMNfVLxWB&view=vewYJshw2X",
         "Car":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIjUl8dRCbolCI&view=vewYO6qS8t",
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vewAteOLwS",
         "Business_Model":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewBKzxKpU",
@@ -269,9 +303,9 @@ def return_string_editurl(word):
 
 def return_global_navbar():
     dict_nav = {
-        "People": [  "Role", "Employee","Department","Business_Class"],
+        "People": [  "Role", "Employee","Department","Department_Class"],
         "Strategy": ["Strategy", "Capability", "Business_Model"],
-        "Process": ["User_Journey","User_Process", "Employee_Journey","Employee_Process",    "KPI"],
+        "Process": ["User_Journey","User_Process", "Employee_Journey","Employee_Process",   "KnowHow", "KPI"],
         "Others": ["System", "City", "Country", "Car"],
     }
 
@@ -461,7 +495,8 @@ def return_content_instance(instance, row, tab, dict_df):
     button2=return_template_dropdown(id="filter_instance",text="Instance")
 
     label_direct_compare="<div class='row' >"+button1+button2 + "</div><div id='versus'></div>"
-    label_indirect_attribute=return_component_small_header("2. Indirect Relations")
+    predefined_class=",".join(return_string_indirect(tab))
+    label_indirect_attribute=return_component_small_header("2. Indirect Relations", id="predefined_relations", h3_tag= f'data-predefined_relations="{predefined_class}"')
     label_indirect_attribute2=return_component_small_header("Result")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
 
@@ -525,8 +560,8 @@ def return_indirect_chart():
     return f"""<div id='cy2' class=' mb-3 height50 width50 background2'></div>
 """
 
-def return_component_small_header(text="",component_inside=''):
-    return f'<h3><b>{text}{component_inside}</b></h3>'
+def return_component_small_header(text="",component_inside='', id='', h3_tag=''):
+    return f'<h3 id="{id}" {h3_tag} ><b>{text}{component_inside}</b></h3>'
 
 def return_word_class_url(class_tab):
     return fr"../../page/{class_tab}/{class_tab}.html"
@@ -581,7 +616,7 @@ def return_content_class(tab, df,dict_df):
     for (fakekey, row),key in zip(df.iterrows(),df[tab]):
         if pd.isna(key) or key is None:
             continue
-        cardstart=f'<div id="{space_replacer(key)}" class="card " style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
+        cardstart=f'<div id="{space_replacer(key)}" class="card card_hover" style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
         cardmiddle=""
         for row_key, row_item in row.items():
             if row_key!=tab:
@@ -906,11 +941,7 @@ def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], h
                 else:
                     print(tab, entity)
 
-    lyioytu = """
-    { // edge ab
-      data: { id: 'egal', source: 'Department', target: 'Employee' }
-    }
-    """
+
 
     js_partend = """"""
 

@@ -11,6 +11,18 @@ ul {
 .mycard{
 }
 
+.card_hover:hover{
+background-color:#ffd43b;
+
+}
+
+.card_hover{
+margin-left:5px;
+margin-right:5px;
+}
+
+
+
 .noli{
 list-style:none;
 margin-left:0rem;
