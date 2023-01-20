@@ -3,6 +3,10 @@
 }
 
 
+.underline{
+text-decoration: underline;
+}
+
 ul {
     margin: 0; /* To remove default bottom margin */
     padding-left: 1.25rem; /* To remove default left padding */

@@ -1,4 +1,4 @@
-var cy;
+    var cy;
 var cy2;
 var dict_cy={};
 var page_class;
@@ -40,10 +40,62 @@ function underscore2space(word) {
 }
 
 //replace wprd
-function noforby(word) {
-    var result = word.replaceAll("For ", "").replaceAll("By ", "");
+function noforby(word, instance_class='') {
+    //it is basically reducing a display id to
+    //var result = word.replaceAll("For ", "").replaceAll("By ", "");
+    var result = col_linked(instance_class=instance_class, col=word, type=2);
     return result;
 }
+
+
+//get all linkable cols
+function get_linkable_cols(instance_class, return_type=1){
+    var helper=link[instance_class];
+    if (checkdata(helper)==false){
+        return ""
+    }
+
+    if (return_type == 1){
+        return helper;
+    }else if (return_type == 2){ //only keys
+        return Object.keys(helper);
+    }else if (return_type == 3){ // only values
+        console.log(typeof(helper),helper);
+        return helper.values;
+    }else{
+        return helper;
+    }
+}
+
+
+//get bool or id of real col
+function col_linked(instance_class, col, type=2){
+    var all_links_of_class = get_linkable_cols(instance_class=instance_class,return_type=1);
+    if (checkdata(all_links_of_class)==false){
+        if(type==1){// two times 1 is correct
+            return false;
+        }else{
+            return "";
+        }
+    }
+
+    if(Object.keys(all_links_of_class).includes(col)){
+        if(type==1){//two times 1 is correct
+            return true;
+        }else{
+            console.log("real col found is ",instance_class, col , " col id is ", all_links_of_class[col]);
+            return all_links_of_class[col];
+        }
+    }else{
+        if(type==1){// two times 1 is correct
+            return false;
+        }else{
+            return "";
+        }
+    }
+}
+
+
 
 //check for nan, null
 function checkdata(value) {
@@ -94,6 +146,8 @@ function get_instance_url(instance){
     return result;
 }
 
+
+
 //get all classes
 function get_all_class() {
     var result = [];
@@ -109,9 +163,16 @@ var result=new Set();
 var df=data[tab];
     $.each(df, function(row_index, row) {
         $.each(row, function(column_name, cell_data) {
-            if(column_name.includes("For ") || column_name.includes("By ")){
-                result.add(column_name.replace("For ","").replace("By ",""));
+            //if(column_name.includes("For ") || column_name.includes("By ")){
+              //  result.add(column_name.replace("For ","").replace("By ",""));
+            //}
+            var id_name_bool=col_linked(instance_class=tab, col=column_name, type=1);
+            var id_name_value=col_linked(instance_class=tab, col=column_name, type=2);
+            if(id_name_bool){
+                result.add(id_name_value);
             }
+
+
         });
     });
 return [tab].concat(Array.from(result));
@@ -145,12 +206,13 @@ var df=data[class_tab];
 
 
 //col is written without For By
-function get_cell(df, index, col, tab) {
+function get_cell(df, index, col, tab){
+    //column is native display data, col is id
     var result;
     $.each(df, function(index_as_number, row) { //traversing through the rows of a df
-
         $.each(row, function(column, cell_data) { //traversing in 1 row, through the columns
-            if (noforby(column) == col) { // we found the column. column matches
+            //if (col_linked(instance_class=tab, col=column) == col) { // we found the column. column matches
+            if (noforby(column, instance_class=tab) == col) {
                 if (index == row[tab]) { //index matches
                     result = cell_data;
                 }
@@ -159,6 +221,7 @@ function get_cell(df, index, col, tab) {
     });
     return result;
 }
+
 
 
 //draw chart 2
@@ -196,7 +259,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 
     var cy = cytoscape({
         container: document.getElementById(id), // container to render in
-        wheelSensitivity: 0.05,
+        wheelSensitivity: 0.02,
         autounselectify: false,
         elements: elements, //list of graph elements to start with
         style: [ // the stylesheet for the graph
@@ -275,11 +338,11 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             spacingFactor: 1,
             avoidOverlap: true,
             padding: 20,
-            refresh:2000,
+            refresh:20000,
             animate: true,
             nodeDimensionsIncludeLabels: true,
-            idealInterClusterEdgeLengthCoefficient: 1.15,
-            nodeRepulsion: 50000,
+            idealInterClusterEdgeLengthCoefficient: 1.00, //also the bigger the more far away
+            nodeRepulsion: 6000, //the bigger the more far away
         },
         ready: function() {
 
@@ -354,7 +417,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 
         }); //end of binding
     }else  if (id == "cy2"){
-        cy.bind('tapstart', 'node', function(event) {
+        cy.bind('tapend', 'node', function(event) {
             //works
         }); //end of binding
     }
@@ -377,10 +440,13 @@ function generate_class_elements(current_class, current_instance) {
     //calculate nodes
     $.each(all_class, function(key, val) {
         if (current_class == val && checkdata(current_instance)) {
-            var label =  underscore2space(val)+ " = "+ underscore2space(current_instance)   ;
+            var label =  underscore2space(val)+ " =\n"+ underscore2space(current_instance)   ;
         } else {
-            var label = underscore2space(val);
+           //label for cy, shorter, more compat
+            var label = underscore2space(val).replace(" ","\n");
+
         }
+
 
         elements.push({
             data: {
@@ -393,20 +459,60 @@ function generate_class_elements(current_class, current_instance) {
     });
 
 
-    //calculate edges
+    //calculate edges nodes based edge calculation
     var alreadydone = [];
     $.each(all_class, function(key, val) { //1. for each tab
         var all_attributes_labels = get_class_columns(val); //return all attributes of that particular class /tab
-        $.each(all_attributes_labels, function(row_index, row_val) { //2. for each tab, for each column
+
+        var all_links = get_linkable_cols(instance_class=val, return_type=1);
+
+        //first time
+        $.each(all_links, function(linkkey, linkval) {
+            console.log("link val ",val ,linkkey,linkval);
+            var destination_label=linkkey; // is display name of column
+            var destination_id=linkval;// is real edge column name
+
+            //how to only display first link to the same
+            if (!alreadydone.includes(linkval+"_"+val) && !alreadydone.includes(val+"_"+linkval)) {
+                //for each real link add edge
+                elements.push({
+                    data: {
+                        'id': val+'_'+destination_label, // changing display name to display id removes double edges
+                        'source': val,
+                        'target': destination_id
+                    }
+                });
+
+
+            }
+
+
+        });
+
+        //second time to mark them as read. the entire node to node relation is finished
+        $.each(all_links, function(linkkey, linkval) {
+            alreadydone.push(linkval+"_"+val);
+            alreadydone.push(val+"_"+linkval);
+        });
+
+
+
+
+        /**
+         *
+         * $.each(all_attributes_labels, function(row_index, row_val) { //2. for each tab, for each column
             //console.log("compare: ",val, " vs ",row_val);
-            if (row_val.includes("For ") || row_val.includes("By ")) {
+            //if (row_val.includes("For ") || row_val.includes("By ")) {
+            if ( col_linked(instance_class=val, col=row_val, type=1) ) {
                 //console.log("yer");
-                var replaced_val = row_val.replaceAll("By ", "");
-                replaced_val = replaced_val.replaceAll("For ", "");
+                //var replaced_val = row_val.replaceAll("By ", "");
+                //replaced_val = replaced_val.replaceAll("For ", "");
+                var replaced_val = col_linked(instance_class=val, col=row_val, type=2);
                 //console.log("replaced val ",replaced_val);
                 if (replaced_val == val) {
                     return; //index which is the class himself
                 }
+
                 if (all_class.includes(replaced_val)) {
                     if (!alreadydone.includes(val + replaced_val) && !alreadydone.includes(replaced_val + val)) {
                         elements.push({
@@ -416,13 +522,23 @@ function generate_class_elements(current_class, current_instance) {
                                 'target': replaced_val
                             }
                         });
-                        alreadydone.push(val + replaced_val);
-                        alreadydone.push(replaced_val + val);
+                    alreadydone.push(val + replaced_val);
+                    alreadydone.push(replaced_val + val);
                     }
                 }
+
+
             }
         });
+
+         */
+
+
     });
+
+
+
+
     return elements;
 }
 

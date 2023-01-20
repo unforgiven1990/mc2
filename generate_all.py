@@ -8,6 +8,7 @@ import os.path
 from selenium import webdriver
 import time
 import glob, os
+import json
 import os
 import openpyxl
 import re
@@ -32,6 +33,16 @@ from deep_translator import (GoogleTranslator,
                              single_detection,
                              batch_detection)
 
+link={}
+
+#this does not cleanup
+def get_raw_dict_df():
+    for excel_data_raw in glob.glob("*.xlsx"):
+        if excel_data_raw !="class_map.xlsx":
+            dict_df = pd.read_excel(excel_data_raw, sheet_name=None)
+            wb = openpyxl.load_workbook(excel_data_raw)
+            dict_df_wb_pair= [dict_df,wb]
+            return dict_df_wb_pair
 
 
 dict_df_wb_pair=[] #to accelerate replace, not repeating the process
@@ -53,41 +64,11 @@ def space_replacer(word):
 def underscore_replacer(word):
     return word.replace("_"," ")
 
-def create_class_map():
-    dict_df,wb=get_dict_df()
-    df_class_map=pd.DataFrame(index=dict_df.keys(),columns=dict_df.keys())
-    for tab,df in dict_df.items():
-        for col in df.columns:
-            if "For " in col or "By " in col:
-                replaced_col=col.replace("For ","").replace("By ", "")
-                df_class_map.at[tab,replaced_col]=1
-    df_class_map.to_excel("class_map.xlsx")
 
 def generate_lark_to_mc2_link():
     dict_df,wb=get_dict_df()
     for tab,df in dict_df.items():
         print(f'HYPERLINK(CONCATENATE("https://unforgiven1990.github.io/mc2/page/","{tab}","/",SUBSTITUTE([{tab}]," ","_"),".html"), "LINK")')
-
-#this function exists in javascript and aStar path, is obsolte
-def return_array_related_classes(tab, connections=2):
-    result = []
-    for excel_data_raw in glob.glob("*.xlsx"):
-        if excel_data_raw !="class_map.xlsx":
-            dict_df = pd.read_excel(excel_data_raw, sheet_name=None)
-            df_tab=dict_df[tab]
-            for column in df_tab.columns:
-                if "For " in column or "By " in column:
-                    result+=[column.replace("For ", "").replace("By ","")]
-
-    neighbbourh_result=[]
-    print("outside result is ",result)
-    if connections >1:
-        for neighbortab in result:
-            print("for neightbor ",neighbortab)
-            neighbbourh_result=neighbbourh_result+return_array_related_classes(neighbortab, connections=connections-1)
-
-    print("final ",tab," is ", result+neighbbourh_result)
-    return list(set(result+neighbbourh_result))
 
 
 def cleanup(dict_df):
@@ -368,6 +349,7 @@ def return_global_html():
     js_cise = '<script  src="../../bootstrap/js/cytoscape-cise.js"></script>'
     js_dagre = '<script  src="../../bootstrap/js/cytoscape-dagre.js"></script>'
     js_data = js_dagre+js_cise+ '<script  src="../../bootstrap/js/data.js"  ></script>'
+    js_link = '<script  src="../../bootstrap/js/link.js"  ></script>'
 
     css_fa = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">'
     css_bootstrap = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">'
@@ -376,7 +358,7 @@ def return_global_html():
     favicon='<link rel="icon" href="../../img/nio.ico">'
 
     head = '<head data-bs-spy="scroll" data-bs-target="#navbar-example" >{}</head>'.format(css_fa +css_bootstrap + css_cj+favicon)
-    body = "<body>"+global_navbar +"<div class='container'>{content}</div> "+meta+ js_jquery + js_popperjs + js_bootstrap + js_fa+js_cytoscape+"{jsinclude}"+js_cj+js_data+"</body>"
+    body = "<body>"+global_navbar +"<div class='container'>{content}</div> "+meta+ js_jquery + js_popperjs + js_bootstrap + js_fa+js_cytoscape+"{jsinclude}"+js_cj+js_data+js_link+"</body>"
     bottomspacer='<div class="p-2 m-2"></div>'
     footer='<footer class="py-0 my-0 fixed-bottom"><p class="text-center text-disable px-3" style="float:right;">&copy; 2023 made by CJ</p></footer>'
 
@@ -384,35 +366,7 @@ def return_global_html():
     template = head+body+bottomspacer
 
 
-#to be deleted
-def return_component_direct_relations(instance, row, tab, dict_df):
-    ul="<ul>{}</ul>"
-    lis = ""
 
-    for instance, val in row.items():
-        if instance=="MC2 Link":
-            continue
-
-        if not val:
-            continue
-
-
-        instance_label = instance.replace("_", " ")
-        if "For" in instance or "By" in instance:
-            for_what = instance.replace("For ", "").replace("By ", "")
-            if pd.isna(val):
-                continue
-            if "," not in val:
-                lis = lis + f"<li>{instance_label}: <a href='../{for_what}/{space_replacer(val)}.html'>{val.replace('_', ' ')}</a></li>"
-            else:
-                ul2 = "<ul>{}</ul>"
-                lis2 = ""
-                for val_item in val.split(","):
-                    lis2 = lis2 + f"<li><a href='../{for_what}/{space_replacer(val_item)}.html'>{val_item.replace('_', ' ')}</a></li>"
-                lis = lis + f"<li>{instance_label}: {ul2.format(lis2)}</li>"
-        else:
-            lis = lis + f"<li>{instance_label}: {val}</li>"
-    return ul.format(lis)
 
 
 #get all images of a particular instance
@@ -486,17 +440,16 @@ def return_grid3():
 
 def return_content_instance(instance, row, tab, dict_df):
     real_instance = instance
-    ul=return_component_direct_relations(instance, row, tab, dict_df)
 
     cy1, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50 width50 background2")
-    label_direct_attribute=return_component_small_header("1. Direct Relations")
+    label_direct_attribute=return_component_small_header("1. Table View")
 
     button1=return_template_dropdown(id="filter_class",text="Class")
     button2=return_template_dropdown(id="filter_instance",text="Instance")
 
     label_direct_compare="<div class='row' >"+button1+button2 + "</div><div id='versus'></div>"
     predefined_class=",".join(return_string_indirect(tab))
-    label_indirect_attribute=return_component_small_header("2. Indirect Relations", id="predefined_relations", h3_tag= f'data-predefined_relations="{predefined_class}"')
+    label_indirect_attribute=return_component_small_header("2. Graph View", id="predefined_relations", h3_tag= f'data-predefined_relations="{predefined_class}"')
     label_indirect_attribute2=return_component_small_header("Result")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
 
@@ -523,7 +476,7 @@ def return_content_instance(instance, row, tab, dict_df):
 </div>
     """
 
-    direct_part_left=("<div class='width100' id='left_direct'>"+ ul + "</div>")
+
     direct_part_left=("<div class='width100' id='left_direct'>"+ "" + "</div>") #this function is now build in javascript
     direct_part_right=("<div class='width100'>"+ label_direct_compare+ "</div>")
 
@@ -577,9 +530,8 @@ def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
         classcount=""
 
     if instance:
-
         h1_icon=f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} "></i></a>'
-        h1_icon = f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
+        h1_icon = f'<a class="text-secondary" href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} text-secondary "></i><span class="underline"> {tab.replace("_"," ")}:</span></a>'
     else:
         h1_icon=f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
     edit=f'<a href="{return_string_editurl(tab)}" style="font-size:1rem;" target="_blank" type="button" class="btn btn-primary btn-sm" ><i class="fa-solid fa-edit"></i></a>'
@@ -587,13 +539,13 @@ def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
     if instance:
         explainer=f''
     else:
-        if tab not in ["User_Process", "Employee_Process"]:
+        if tab not in ["User_Process", "Employee_Process"]: #todo hardcoded
             explainer = f'<p class="text-secondary">{return_string_component(tab)}</p>'
         else:
             print(tab)
             explainer = f''
     if not custom_header_text:
-        header_text= f'<a class="text-secondary">{tab.replace("_"," ")}:</a> {instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
+        header_text= f'{instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
     else:
         header_text=custom_header_text
     h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" ><b>{h1_icon} {header_text} {classcount}</b> {edit} </h1>' +explainer
@@ -602,14 +554,6 @@ def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
     h1=grid3.format(h1)
     return return_component_spacer()+h1
 
-#this function also exist in javascript, is obsolte
-def return_linkable_attributes(df):
-    result=[]
-    for col in df.columns:
-        if "For " in col or  "By " in col:
-            replaced_col=col.replace("For ","").replace("By ","")
-            result=result+[replaced_col]
-    return result
 
 def return_content_class(tab, df,dict_df):
     cards=''
@@ -643,7 +587,7 @@ def return_content_class(tab, df,dict_df):
     header=return_component_header(df,tab, dict_df, instance="")
     template_card=return_template_card()
     # component_cy, component_cy_js=return_component_cy(dict_df=dict_df, highlight_classes=[tab], only_nodes=[tab]+return_array_related_classes(tab=tab,connections=2),height="height50")
-    related_class=return_linkable_attributes(df=df)
+    related_class=""
     component_cy, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],
                                                         only_nodes=related_class, height="height50")
 
@@ -652,7 +596,8 @@ def return_content_class(tab, df,dict_df):
     grid2=return_grid2()
     grid3=return_grid3()
     part_direct = grid3.format(return_component_small_header("1. Class Overview"),"")+component_cy
-    part_inddirect=grid2.format(return_component_small_header("2. Instance Overview"), cards)
+    part_direct=""
+    part_inddirect=grid2.format(return_component_small_header("1. Instance Overview"), cards)
 
 
     content= header+spacer+part_direct+spacer+part_inddirect+spacer
@@ -675,7 +620,6 @@ def return_content_index(dict_df):
 def get_user_journey_banner(user_journey_instance):
     if not user_journey_instance:
         return ""
-
     for file_path in glob.glob("img/*.jpg"):
         file_name = os.path.basename(file_path)
         file_name_withoutjpg = os.path.basename(file_name).replace(".jpg", "")
@@ -685,7 +629,84 @@ def get_user_journey_banner(user_journey_instance):
     return ""
 
 
+#calculate then linkable column once, then reuse it again in python and javascript
+def generate_linkabe_column():
+    df_result=pd.DataFrame()
+    #dict_df,wb=get_raw_dict_df()#get raw dict df, because dict df because cleanup replaces the string and data
+    dict_df,wb=get_dict_df()#get raw dict df, because dict df because cleanup replaces the string and data
+    confidence_level=0.8
+    dict_result={}
 
+    for tab,df in dict_df.items():#source tab
+        for tab_compare in dict_df.keys():  # check against destination tab
+            for col in df.columns:#for each column of the source tab
+                result = 0
+                itemchecked = 0
+                DataSeries = dict_df[tab_compare][tab_compare]
+                for cell_array in df[col]:
+                    if not isinstance(cell_array, str): #continue if we data is float
+                        continue
+                    for cell in cell_array.split(","): #todo split by comma could be messed up with uncleaned data
+                        if cell in DataSeries.values:
+                            result=result+1
+                            itemchecked=itemchecked+1
+                        else:
+                            result = result + 0
+                            itemchecked=itemchecked+1
+                if itemchecked!=0:
+                    df_result.at[tab+"_"+col,tab_compare]=result/itemchecked
+
+                    #hard coded edges to exclude
+                    if col in [ "Has Leader", "Is Leader of Department"]: #todo hard coded label here
+                        continue
+
+
+                    if result/itemchecked >= confidence_level and tab_compare != col  :
+                        if not tab in dict_result:
+                            dict_result[tab]={col:tab_compare}
+                        else:
+                            last_dict=dict_result[tab]
+                            last_dict[col]=tab_compare
+                            dict_result[tab]=last_dict #store it somewhere
+    #df_result.to_excel("test.xlsx")#store as excel
+
+
+    #store it as json
+    json_result = json.dumps(dict_result, indent=4)
+    global link
+    link = dict_result
+    with open(fr"bootstrap/js/link.js", "w", encoding="utf-8") as file:
+        file.write(f"var link = {json_result}")
+
+    return df_result
+
+
+#for index_class, check if all his columns are linkable
+def get_linkable_cols(instance_class, return_type=1):
+    helper=link[instance_class]
+    if return_type==1:#return everything {"my naming": "real label", "my naming": "real label"}
+        return helper
+    elif return_type==2: #only return dict keys
+        return helper.keys()
+    elif return_type==3:# only return values
+        return helper.values()
+    else:
+        return helper
+
+
+
+def col_linked(instance_class, col, type=2):
+    all_links_of_class = get_linkable_cols(instance_class=instance_class,return_type=1)
+    if col in all_links_of_class.keys():
+        if type==1: # return bool two times 1 is correct
+            return True
+        else: #return label
+            return all_links_of_class[col]
+    else:
+        if type==1: # return bool two times 1 is correct
+            return False
+        else: #return label
+            return ""
 
 def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscription"):
 
@@ -799,11 +820,12 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
     #now only checking user journey
     df_user_or_employee_journey= dict_df[tab]
     if tab=="User_Journey":
-        process_name="For User_Process"
-        process_name_without="User_Process"
+        process_display_name="For User_Process"#my display name Todo hard coded, to replace with custom label
+        process_display_name="Has User Processes"#my display name Todo hard coded, to replace with custom label
+        process_id_name=col_linked(instance_class=tab, col=process_display_name) #real id
     else:
-        process_name="For Employee_Process"
-        process_name_without = "Employee_Process"
+        process_display_name="Has Employee Processes" # my display name
+        process_id_name = col_linked(instance_class=tab, col=process_display_name) #real id
 
 
     all_nav=""
@@ -811,7 +833,7 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
     for journey_counter, (key, row) in enumerate(df_user_or_employee_journey.iterrows()):
         journey_counter=0#quick and dirty way to reset it for h2 labeling
         if one_bm in key:
-            a_user_process=df_user_or_employee_journey.at[key,process_name]
+            a_user_process=df_user_or_employee_journey.at[key,process_display_name]
 
             #if this user journey has 1 or many processes, then the navvalue and secitonvalue will be replaced
             # if user journey has 0 process. then it stays as key
@@ -832,12 +854,12 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
                     for process_counter, process in enumerate( a_user_process.split(",")):
                         label = f"{journey_counter+1}.{process_counter+1} "
                         process_display = process.replace(" ", "_")
-                        link = f"<a href='../../page/{process_name.replace('For ','')}/{process.replace(' ', '_')}.html'>{label + process.replace('_', ' ')}</a>"
-                        image= return_instance_img(instance=underscore_replacer(process), tab=process_name_without, imgclass="journeyimg")
+                        link = f"<a href='../../page/{col_linked(instance_class=tab, col=process_display_name)}/{process.replace(' ', '_')}.html'>{label + process.replace('_', ' ')}</a>"
+                        image= return_instance_img(instance=underscore_replacer(process), tab=process_id_name, imgclass="journeyimg")
                         #image=f'<img class="journeyimg" src="../../attachments/MC2 Data-{process_name_without}_Attachment/{process.replace("_"," ")}_Process Flow.jpg" >'
 
                         #get summary of the process
-                        df_process=dict_df[process_name.replace("For ","")]
+                        df_process=dict_df[process_id_name]
                         try:
                             summary=df_process.at[process, "Process Summary"]
                         except:
@@ -909,44 +931,6 @@ def return_template_dropdown(id, text ):
 def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], height="height100", add_instance_label=""):
     """cy=cytoscape.js"""
     cy = f"<div id='cy' class=' mb-3 {height}'></div>"
-
-    js_partstart = """
-    $(document).ready(function () {
-    var cy = cytoscape({
-      container: document.getElementById('cy'), // container to render in
-    wheelSensitivity:0.05,
-     autounselectify: false,
-      elements: [ // list of graph elements to start with
-        """
-    js_middle = ""
-
-    dict_df={x: dict_df[x] for x in only_nodes}
-
-    # add nodes
-    for tab, df in dict_df.items():
-        js_middle = js_middle + '{ data: { id: "' + tab + f'",  label:"{tab.replace("_", " ")}", href: "' + f'../../page/{tab}/{tab}.html' + '"} },'
-
-    checklist = []
-    # add edges
-    for tab, df in dict_df.items():
-        for column in df.columns:
-            if "For " in column or "By " in column:
-                entity = column.replace("For ", "").replace("By ", "")
-
-                if entity in dict_df:
-                    if f"{entity}_{tab}" not in checklist:
-                        checklist += [f"{entity}_{tab}", f"{tab}_{entity}"]
-                        js_middle = js_middle + "{ data: { id: '" + tab + "" + entity + "', " + f"source:'{tab}', " + f"target:'{entity}'" + '   }},'
-
-                else:
-                    print(tab, entity)
-
-
-
-    js_partend = """"""
-
-    chart_js = js_partstart + js_middle + js_partend
-    #return [cy,f"<script>{chart_js}</script>"]
     return [cy,f""]
 
 
@@ -1001,8 +985,8 @@ def create_html():
 
 
 if __name__ == '__main__':
+    generate_linkabe_column()
     generate_lark_to_mc2_link()
-    create_class_map()
     return_global_navbar()
     return_global_html()
     create_html()
