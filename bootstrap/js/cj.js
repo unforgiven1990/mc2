@@ -1,4 +1,4 @@
-    var cy;
+var cy;
 var cy2;
 var dict_cy={};
 var page_class;
@@ -60,7 +60,7 @@ function get_linkable_cols(instance_class, return_type=1){
     }else if (return_type == 2){ //only keys
         return Object.keys(helper);
     }else if (return_type == 3){ // only values
-        console.log(typeof(helper),helper);
+        //console.log(typeof(helper),helper);
         return helper.values;
     }else{
         return helper;
@@ -83,7 +83,7 @@ function col_linked(instance_class, col, type=2){
         if(type==1){//two times 1 is correct
             return true;
         }else{
-            console.log("real col found is ",instance_class, col , " col id is ", all_links_of_class[col]);
+            //console.log("real col found is ",instance_class, col , " col id is ", all_links_of_class[col]);
             return all_links_of_class[col];
         }
     }else{
@@ -131,6 +131,7 @@ function get_instance_url(instance){
     if( checkdata(instance) ==false ){
         return "";
     }
+    instance=instance.trim();
 
     var result="";
     $.each(data, function(class_tab, df) {
@@ -138,7 +139,9 @@ function get_instance_url(instance){
             $.each(row, function(row_col, cell_data) {
                 if( (row[class_tab]==instance) &&(result=='') ){
                     result = '../../page/'+class_tab+'/'+instance+'.html';
-                    console.log("result instance ", instance);
+                    //console.log("result instance ", instance);
+                }else{
+                    //console.log("result instance ", instance, " not found",row[class_tab] );
                 }
             });
         });
@@ -251,7 +254,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
         if (checkdata(selected_layout)){
             var layout_style=selected_layout.replace(" layout", "");
         }else{
-            console.log("selected layout is ",selected_layout);
+            //console.log("selected layout is ",selected_layout);
             var layout_style="concentric";
         }
     }
@@ -368,7 +371,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     //highlight the end node in instance chart
 
     $.each(cy.$('node'), function(key, val) {
-        console.log("asdsadsa ",key,val.data());
+        //console.log("asdsadsa ",key,val.data());
         var node_data=val.data();
         var lis=[];
         if(node_data["class"]=="highlight"){
@@ -468,7 +471,7 @@ function generate_class_elements(current_class, current_instance) {
 
         //first time
         $.each(all_links, function(linkkey, linkval) {
-            console.log("link val ",val ,linkkey,linkval);
+            //console.log("link val ",val ,linkkey,linkval);
             var destination_label=linkkey; // is display name of column
             var destination_id=linkval;// is real edge column name
 
@@ -633,20 +636,20 @@ return result;//not found current_node in path, which is strange,should not happ
 //a_nodes = nodes to be traversed andprocessed, cleared path is result
 function rekursive_traverse(a_nodes, cleared_path, came="0"){
     if (checkdata(a_nodes==false)){ //a_nodes is undefined
-        console.log("section 0. ", a_nodes, a_nodes.length, came);
+        //console.log("section 0. ", a_nodes, a_nodes.length, came);
         return [];
     }
     if (a_nodes.length==0){// a_nodes.leng == 0
-        console.log("section 1. ", a_nodes,  a_nodes.length, came);
+        //console.log("section 1. ", a_nodes,  a_nodes.length, came);
         return [];
     }else if (a_nodes.length>1){// a_nodes.leng > 1
 
         //do the first one, give the next one to rekursion
         var first_part=rekursive_traverse([a_nodes[0]], cleared_path, came="2.1"); //split first node
-        console.log("section 2.1 ", a_nodes, a_nodes.length, came, [a_nodes[0]]);
+        //console.log("section 2.1 ", a_nodes, a_nodes.length, came, [a_nodes[0]]);
 
         var other_part=rekursive_traverse(a_nodes.slice(1), cleared_path, came="2.2"); //rest of the nodes
-        console.log("section 2.2 ", a_nodes, a_nodes.length, came, a_nodes.slice(1));
+        //console.log("section 2.2 ", a_nodes, a_nodes.length, came, a_nodes.slice(1));
         return first_part.concat(other_part);
 
     }else { // a_nodes.leng == 1
@@ -658,13 +661,13 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
             var target_class=a_nodes[0]["target_class"];
             var source_instance=a_nodes[0]["source_instance"];
         }catch{
-            console.log("section 3.1 ", a_nodes,  a_nodes.length,came);
+            //console.log("section 3.1 ", a_nodes,  a_nodes.length,came);
             return [];
         }
 
         // the node has children but user doesnt want to see it. potential bug
         if (target_class==-1){
-            console.log("section 3.2 ", a_nodes, a_nodes.length, came);
+            //console.log("section 3.2 ", a_nodes, a_nodes.length, came);
             return [];  }
 
         //initialize for rekursion
@@ -729,7 +732,7 @@ function rekursive_traverse(a_nodes, cleared_path, came="0"){
 
         //general: always let founded instance traverse to their instance
         //specific: if their target_class==-1(not in path) or i
-        console.log("section 3.3 ", a_nodes, a_nodes.length, came, next_a_nodes);
+        //console.log("section 3.3 ", a_nodes, a_nodes.length, came, next_a_nodes);
         return found_together.concat(rekursive_traverse(a_nodes=next_a_nodes, cleared_path=cleared_path , came="3.3"));
     }
 }
@@ -813,7 +816,7 @@ function display_instance_attribute_aslist(instance,instance_class){
     $.each(df, function(df_index, row) {
         if(row[instance_class]==instance){
             $.each(row, function(row_index, cell_data) {
-                console.log(cell_data, typeof(cell_data));
+                //console.log(cell_data, typeof(cell_data));
                 var result_display;// result can belink, can be <a></a>
                 if (checkdata(cell_data)==false){// not string at all
                     //lis=lis+produce_li_for_word(row_index, cell_data);
@@ -840,7 +843,6 @@ function display_instance_attribute_aslist(instance,instance_class){
 function display_instance_indirect_attribute_aslist(instance,instance_class){
 var predefined_classes=$("#predefined_relations").data("predefined_relations");
 var a_classes=predefined_classes.split(",");
-console.log("sdaasdasdsadsad "+a_classes);
 var tds;
 
 //this class has no predefined classes
@@ -857,7 +859,7 @@ $.each(a_classes, function(index, predef_class) {
 
     //calculate instances of the general path
     // the result format can be directly put int cy json
-    console.log("wtf "+predef_class);
+    //console.log("wtf "+predef_class);
     var instance_elements = generate_instance_elements(current_class=page_class, target_class=predef_class, highlight_class=predef_class);
 
     //get highlight the leaf instances.
@@ -876,7 +878,7 @@ $.each(a_classes, function(index, predef_class) {
         //pass
     }else{
         tds=tds+'<tr><td class="labeltd" >'+predef_class.replace("_", " ")+' <div class="text-muted">(calculated)</div></td>' +'<td>'+produce_lis(a_result)+'</td></tr>';
-        console.log("predef_class "+predef_class);
+        //console.log("predef_class "+predef_class);
     }
 
 
@@ -941,7 +943,7 @@ function update_select_business(){
 
 //update user view or employee perspective select
 function update_select_perspective(){
-    $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Employee_Journey">Employee Perspective</option>');
+    $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Process_Category">Employee Perspective</option>');
 
     var selected_persp= $("#main").data("forperspective");
     $("#select_perspective").val(selected_persp);
@@ -1030,6 +1032,7 @@ $(document).ready(function() {
             cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
           }
     }
+
 
     //update the left side
     //needs to be after cy has created

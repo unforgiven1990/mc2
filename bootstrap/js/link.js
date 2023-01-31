@@ -1,25 +1,24 @@
 var link = {
     "User_Journey": {
         "Has User Processes": "User_Process",
-        "Matches with Employee Journey": "Employee_Journey",
+        "Matches with Employee Journey": "Process_Category",
         "Is Part of Business Model": "Business_Model"
     },
     "User_Process": {
         "Belongs to User Journey Part": "User_Journey",
         "Matches Employee Process": "Employee_Process"
     },
-    "Employee_Journey": {
+    "Process_Category": {
         "For User Journey": "User_Journey",
         "Has Employee Processes": "Employee_Process",
         "For Business Model": "Business_Model"
     },
     "Employee_Process": {
         "Matches User Process": "User_Process",
+        "Has Subprocess": "Employee_Process",
         "Implements Capabilities": "Capability",
         "Owned by Role": "Role",
-        "Uses System": "System",
-        "Measured by KPI": "KPI",
-        "Enabled by KnowHow": "KnowHow"
+        "Uses System": "System"
     },
     "Country": {
         "Has Business Model": "Business_Model",
@@ -40,10 +39,10 @@ var link = {
     "Department": {
         "Belongs to Department": "Department",
         "Has Sub Department": "Department",
-        "Belongs to Department_Class": "Department_Class",
+        "Belongs to Department_Class": "Department_Category",
         "Has Employee": "Employee"
     },
-    "Department_Class": {
+    "Department_Category": {
         "Has Departments": "Department"
     },
     "Employee": {
@@ -57,15 +56,16 @@ var link = {
     },
     "City": {
         "Is Part of": "Country",
-        "Has Employees": "Employee"
+        "Has Employees": "Employee",
+        "Has Facility": "Facility"
     },
     "System": {
         "Used By Process": "Employee_Process"
     },
-    "KPI": {
-        "Measures Process": "Employee_Process"
-    },
     "Car": {
         "Available in Country": "Country"
+    },
+    "Facility": {
+        "Belongs to City": "City"
     }
 }

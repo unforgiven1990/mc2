@@ -16,6 +16,11 @@ import re
 from pypinyin import pinyin, lazy_pinyin, Style
 import shutil
 from PIL import Image
+import selenium
+from selenium.webdriver.common.by import By
+import undetected_chromedriver as uc
+import os.path
+from selenium import webdriver
 
 from pathlib import Path
 from pandas.api.types import is_string_dtype
@@ -148,11 +153,13 @@ def return_string_gallery(word):
         "Car":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIjUl8dRCbolCI&view=vewEEtBGbz",
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vew2GwzJXf",
         "Business_Model":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
-        "Department_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
+        "Department_Category":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewzVWmrso",
         "User_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblAyuTuEKVVVrZ3&view=vewBZ5BYQK",
-        "Employee_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblgDQkj9F2O3XSd&view=vewxV21Rjf",
+        "Process_Category":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblgDQkj9F2O3XSd&view=vewxV21Rjf",
         "Country":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblDmXtQ5JPySoUz&view=vewrnTjfGP",
-        "Others":"fa-gear",
+        "Things":"fa-gear",
+        "Facility":"fa-store",
+        "Approval":"fa-check",
     }
     return dict_gallery[word]
 
@@ -162,26 +169,26 @@ def return_string_indirect(word):
     dict_gallery={
         "Departments": [],
         "Department": [ "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
-        "Department_Class": ["Employee", "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
+        "Department_Category": ["Employee", "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
         "Leader": [],
         "Employee": [ "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "System"],
         "Role": [ "User_Process", "KPI", "KnowHow", "Capability", "System"],
         "User_Process":["Role","KPI"],
-        "Employee_Process": ["Department", "Department_Class", "Employee","User_Journey"],
-        "Capability": ["Department","Department_Class", "Role", "Employee"],
-        "System": ["Department","Department_Class", "Role", "Employee"],
-        "Value": [],
-        "People": [],
+        "Employee_Process": ["Department", "Department_Category", "Employee","User_Journey"],
+        "Capability": ["Department","Department_Category", "Role", "Employee"],
+        "System": ["Department","Department_Category", "Role", "Employee"],
         "Strategy": [],
-        "City": [],
-        "KnowHow": ["Department","Department_Class", "Role", "Employee"],
-        "Car": [],
-        "KPI": ["Department","Department_Class", "Role", "Employee"],
-        "Business_Model": ["Department","Department_Class", "Role", "Employee"],
-        "User_Journey": ["Department","Department_Class", "Role", "Employee"],
-        "Employee_Journey": ["Department","Department_Class", "Role", "Employee"],
-        "Country": [],
-        "Others": [],
+        "City": ["Role","Department","Employee_Process"],
+        "KnowHow": ["Department","Department_Category", "Role", "Employee"],
+        "Car": ["City"],
+        "KPI": ["Department","Department_Category", "Role", "Employee"],
+        "Business_Model": ["Department","Department_Category", "Role", "Employee"],
+        "User_Journey": ["Department","Department_Category", "Role", "Employee"],
+        "Process_Category": ["Department","Department_Category", "Role", "Employee"],
+        "Country": ["Employee_Process"],
+        "Things": [],
+        "Approval": ["Role","Process_Category"],
+        "Facility": ["Country"],
     }
     return dict_gallery[word]
 
@@ -192,7 +199,7 @@ def return_string_icon(word):
         "Departments": "fa-sitemap",
         "L1_Department":"fa-folder-tree",
         "Department":"fa-folder-tree",
-        "Department_Class":"fa-sitemap",
+        "Department_Category":"fa-sitemap",
         "L2_Department":"fa-folder-tree",
         "L3_Department":"fa-folder-tree",
         "Leader":"fa-user-tie",
@@ -212,9 +219,11 @@ def return_string_icon(word):
         "KPI":"fa-chart-simple",
         "Business_Model":"fa-money-bill",
         "User_Journey":"fa-route",
-        "Employee_Journey":"fa-list-check",
+        "Process_Category":"fa-list-check",
         "Country":"fa-globe",
-        "Others":"fa-gear",
+        "Things":"fa-gear",
+        "Approval":"fa-check",
+        "Facility":"fa-store",
     }
     return dict_icon[word]
 
@@ -225,7 +234,7 @@ def return_string_component(word):
         "Departments": "",
         "L1_Department":"This view shows you what L1 department exists that are relevant for EB.",
         "Department":"This view shows you what L1 department exists that are relevant for EB.",
-        "Department_Class":"This view is to show high level abstrac classes aggregated by many departments",
+        "Department_Category":"This view is to show high level abstrac classes aggregated by many departments",
         "L2_Department":"This view shows you what L2 departments under European Business.",
         "L3_Department":"This view shows you what L3 departments under European Business.",
         "Leader":"This summary shows who are the department leaders and what do they lead.",
@@ -245,9 +254,11 @@ def return_string_component(word):
         "Car":"What model exists for different country and business model",
         "Business_Model":"The location view shows what form of ownership user can have.",
         "User_Journey": f"<select id='select_business'></select><select id='select_perspective'></select>",
-        "Employee_Journey":"<select id='select_business'></select><select id='select_perspective'></select>",
+        "Process_Category":"<select id='select_business'></select><select id='select_perspective'></select>",
         "Country":"Markets where NIO sells car",
-        "Others":"sad",
+        "Things":"sad",
+        "Approval":"sad",
+        "Facility":"sad",
     }
     return dict_explainer[word]
 
@@ -256,7 +267,7 @@ def return_string_editurl(word):
     """returns a fa icon"""
     dict_url={
         "Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxOzBlxXbfgFi&view=vewgFkOi9f",
-        "Department_Class":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbltmeBARSbQIJxN&view=vewN8BQVGq",
+        "Department_Category":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbltmeBARSbQIJxN&view=vewN8BQVGq",
         "L1_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxOzBlxXbfgFi&view=vewgFkOi9f",
         "L2_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblcnQTN78GEt3nR&view=vewjua7iRe",
         "L3_Department":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblyxoLGbBcp1yUZ&view=vew8hBjN9a",
@@ -275,8 +286,10 @@ def return_string_editurl(word):
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vewAteOLwS",
         "Business_Model":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl8tg5FsGjSKG3Y&view=vewBKzxKpU",
         "User_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblAyuTuEKVVVrZ3&view=vew6pEQzqw",
-        "Employee_Journey":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblgDQkj9F2O3XSd&view=vewpiLPhLI",
+        "Process_Category":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblgDQkj9F2O3XSd&view=vewpiLPhLI",
         "Country":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblDmXtQ5JPySoUz&view=vewSKuK63B",
+        "Approval":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblLJfEXlvTIHzCz&view=vewgsFXq2c",
+        "Facility":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl27IlPlyMwoUQ9&view=vewzwoeVMm",
     }
     return dict_url[word]
 
@@ -284,10 +297,10 @@ def return_string_editurl(word):
 
 def return_global_navbar():
     dict_nav = {
-        "People": [  "Role", "Employee","Department","Department_Class"],
+        "People": [ "Employee", "Role" ,"Department","Department_Category"],
         "Strategy": ["Strategy", "Capability", "Business_Model"],
-        "Process": ["User_Journey","User_Process", "Employee_Journey","Employee_Process",   "KnowHow", "KPI"],
-        "Others": ["System", "City", "Country", "Car"],
+        "Process": ["User_Journey","User_Process", "Process_Category","Employee_Process"],
+        "Things": [ "Country","City", "Car", "Facility", "System"],
     }
 
     navbar_template='<nav class="navbar navbar-expand-lg navbar-dark bg-primary" aria-label="Eighth navbar example"> <div class="container">  <a href="../../page/index/index.html" class="navbar-brand"> <img src="../../img/nio light.png" height="28" alt="CoolBrand"> </a>  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarinstance" aria-controls="navbarinstance" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarinstance"> <ul class="navbar-nav me-auto mb-2 mb-lg-0"> {} </ul> </div> </div> </nav>'
@@ -560,7 +573,8 @@ def return_content_class(tab, df,dict_df):
     for (fakekey, row),key in zip(df.iterrows(),df[tab]):
         if pd.isna(key) or key is None:
             continue
-        cardstart=f'<div id="{space_replacer(key)}" class="card card_hover" style="width: 32%;float:left;">  <div class="card-body">    <h5 class="card-title"><a href="../../page/{tab}/{key}.html">{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
+
+        cardstart=f'<div id="{space_replacer(key)}" class="card card_hover" style="width: 32%;float:left;">  <div class="card-body class_card_body"><h5 class="card-title"><a href ={f"../../page/{tab}/{key}.html"} >{key.replace("_"," ")}</a></h5>'+'{}</div></div>'
         cardmiddle=""
         for row_key, row_item in row.items():
             if row_key!=tab:
@@ -634,7 +648,7 @@ def generate_linkabe_column():
     df_result=pd.DataFrame()
     #dict_df,wb=get_raw_dict_df()#get raw dict df, because dict df because cleanup replaces the string and data
     dict_df,wb=get_dict_df()#get raw dict df, because dict df because cleanup replaces the string and data
-    confidence_level=0.8
+    confidence_level=0.7
     dict_result={}
 
     for tab,df in dict_df.items():#source tab
@@ -668,7 +682,7 @@ def generate_linkabe_column():
                             last_dict=dict_result[tab]
                             last_dict[col]=tab_compare
                             dict_result[tab]=last_dict #store it somewhere
-    #df_result.to_excel("test.xlsx")#store as excel
+    #df_result.to_excel("link.xlsx")#store as excel
 
 
     #store it as json
@@ -971,7 +985,7 @@ def create_html():
 
 
     #user journey specific Page, this comes after the general creation and overwrites the class html pages
-    for user_employee_journey in ["User_Journey", "Employee_Journey"]:
+    for user_employee_journey in ["User_Journey", "Process_Category"]:
         a_bm = ["Purchase", "Subscription", "Op-Leasing", "Fin-Leasing"]
         for one_bm in a_bm:
             Path(f"page/{user_employee_journey}").mkdir(parents=True, exist_ok=True)
@@ -984,12 +998,93 @@ def create_html():
                 file.write(str(result))
 
 
+logged_in=False
+def get_all_wikis(id,driver):
+    """
+    takes a url and returns a set of wiki id
+    :param url:
+    :return:
+    """
+    url=f"https://nio.feishu.cn/wiki/{id}"
+    driver.get(url)
+    a_results=[]
+
+    global logged_in
+    if not logged_in:
+        input("Enter after logged in")
+        logged_in=True
+
+    soup = BeautifulSoup(driver.page_source)
+    for tag in soup.find_all(class_='tree-item'):
+    #for tag in driver.find_all("css selector", ".tree-item"):
+        #get the direct div
+        #div1=tag.select_one('.tree-node-wrapper.wiki-tree-normal-node')
+        #div2=div1.select_one('.tree-item')
+        div2=tag
+        print(tag)
+
+        token=div2.attrs["data-token"]
+        title=div2.attrs["data-title"]
+        parent=div2.attrs["data-parent"]
+        pos=div2.attrs["data-pos"]
+        a_results+=[token]
+
+    return a_results
+
+
+def initiate_driver():
+    driver = uc.Chrome(version_main=108)
+    driver.maximize_window()  # maximize window size
+    return driver
+
+
+def rekursive_crawl_wiki(start_id="", driver="", found_result=[]):
+    """
+    crawl through wiki to get all articles
+    1. loop over all articles found in the current page
+    2. check if these articles are already in the found_result
+        2.1 if article is found first time, then also rekursive crawl that wiki
+
+    1. termination condition is when the page has no more new urls
+
+    use ID, system calculates url automatically. more readable than url
+    :return:
+    """
+    if not driver:
+        driver=initiate_driver()
+
+    for found_id in get_all_wikis(id=start_id, driver=driver):
+        """a found url can be already known, new and not child node, new and child node"""
+        print(f"currently at url {start_id}, checking found_url {found_id}")
+        if found_id not in found_result:#if found, the the wik must be child of page article
+            #found_result=found_result.union(get_all_wikis(found_url), found_result=found_result)
+            found_result+=[found_id]
+            found_result+=[rekursive_crawl_wiki(start_id=found_id, driver=driver, found_result=found_result)]
+
+    print(found_result)
+    return found_result
+
+
+def craw_wiki():
+    #find all the token from EU wiki, or other wiki
+    eu_wiki = "wikcnC8uxuVJ2C12E7lTdDUvXKe"
+    threec_wki = "wikcnibclnFGSyFOvzn9nVtosre"
+    a_tokens=rekursive_crawl_wiki(start_id=threec_wki)
+
+    #analyse them and create keyword for that article.
+
+    # in creating the detailed article,check if there is any high correlation
+
+
 if __name__ == '__main__':
-    generate_linkabe_column()
-    generate_lark_to_mc2_link()
-    return_global_navbar()
-    return_global_html()
-    create_html()
+    #craw_wiki()
+
+    if True:
+        generate_linkabe_column()
+        generate_lark_to_mc2_link()
+        return_global_navbar()
+        return_global_html()
+        create_html()
 
 
 
