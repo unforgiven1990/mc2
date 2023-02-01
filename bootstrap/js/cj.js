@@ -138,7 +138,7 @@ function get_instance_url(instance){
     $.each(data, function(class_tab, df) {
         $.each(df, function(row_index, row) {// [0: [{col: data},{col: data} ]]
             $.each(row, function(row_col, cell_data) {
-                if( (row[class_tab]==instance) &&(result=='') ){
+                if( (row[class_tab]==instance) && (result=='') ){
                     result = '../../page/'+class_tab+'/'+instance+'.html';
                     //console.log("result instance ", instance);
                 }else{
@@ -149,6 +149,8 @@ function get_instance_url(instance){
     });
     return result;
 }
+
+
 
 
 
@@ -907,9 +909,13 @@ return "<ul>"+lis+"</ul>";
 
 //produce individual lis
 function produce_li_for_word(row_index,cell_data){
-    var url = get_instance_url(cell_data);
     var dot = row_index!="" ? ": ": "";
     row_index=row_index.replace("_", " ");
+
+    console.log("start instance url ",cell_data, row_index);
+    var url = get_instance_url(cell_data);
+    console.log("finish instance url ",cell_data, row_index,url);
+
     if (url !=''){
         var li="<li class='noli'>"+row_index+dot+"<a href='"+url+"'>"+underscore2space(cell_data)+"</a></li>";
     }else{
@@ -1153,8 +1159,9 @@ $(document).ready(function() {
         cy.ready(function() {
             var parent_dept=get_cell(df=data["Department"], index=page_instance, col="Belongs to Department", tab=page_class);
             if(parent_dept in bugged_departments){
-                parent_dept=bugged_departments[parent_dept];
+                //parent_dept=bugged_departments[parent_dept];
             }
+            parent_dept=space2underscore(parent_dept); //to correct bug, should not be here
             console.log("parentdept",parent_dept);
             var focus=cy4.$('#'+page_instance+", #"+parent_dept);
             console.log(focus);

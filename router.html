@@ -1,0 +1,36 @@
+<html>
+<head></head>
+<body>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+<script >
+
+ var params = new URLSearchParams(document.location.search);
+
+var tab = params.get("tab");
+var instance = params.get("instance");
+
+forbidden_chars={
+                    "  ":' ',
+                    "@nio.com":'',
+                     "@nio.io":'',
+                     ",":'',
+                     ".":'_',
+                     '"':'',
+                     "/":'',
+                     ":":'',
+                     ")":'',
+                     "(":'',
+                     "  ": ' ',# replaced in this order, first remove double space, then replace to underscore
+                     " ":'_', #still empty space in tab data not converted
+                     };
+
+$.each(forbidden_chars, function(key, val) {
+instance=instance.replace(key,val);
+ });
+var url="http://mc2.nioint.com/page/"+class+"/"+instance+".html";
+window.location.assign(url);
+
+</script>
+</body>
+</html>

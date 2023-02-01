@@ -38,7 +38,6 @@ var link = {
     },
     "Department": {
         "Belongs to Department": "Department",
-        "Belongs to Department_Class": "Department_Category",
         "Has Employee": "Employee"
     },
     "Department_Category": {

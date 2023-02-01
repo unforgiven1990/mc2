@@ -168,26 +168,22 @@ def return_string_indirect(word):
     """returns a fa icon"""
     dict_gallery={
         "Departments": [],
-        "Department": [ "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
-        "Department_Category": ["Employee", "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "Role"],
-        "Leader": [],
-        "Employee": [ "User_Process","Employee_Process", "KPI", "KnowHow", "Capability", "System"],
-        "Role": [ "User_Process", "KPI", "KnowHow", "Capability", "System"],
-        "User_Process":["Role","KPI"],
+        "Department": [ "Role", "City","Capability", "Process_Category","User_Process","Employee_Process","System"],
+        "Department_Category": [ "Role", "Employee","City","Capability", "Process_Category","User_Process","Employee_Process","System"],
+        "Employee": [ "User_Process","Employee_Process",  "Capability", "System"],
+        "Role": [ "User_Process","Department", "Capability", "System", "City"],
+        "User_Process":["Process_Category", "Department", "Role","Employee"],
         "Employee_Process": ["Department", "Department_Category", "Employee","User_Journey"],
         "Capability": ["Department","Department_Category", "Role", "Employee"],
         "System": ["Department","Department_Category", "Role", "Employee"],
-        "Strategy": [],
+        "Strategy": ["Employee_Process","System"],
         "City": ["Role","Department","Employee_Process"],
-        "KnowHow": ["Department","Department_Category", "Role", "Employee"],
         "Car": ["City"],
-        "KPI": ["Department","Department_Category", "Role", "Employee"],
         "Business_Model": ["Department","Department_Category", "Role", "Employee"],
         "User_Journey": ["Department","Department_Category", "Role", "Employee"],
-        "Process_Category": ["Department","Department_Category", "Role", "Employee"],
+        "Process_Category": ["Department","Department_Category", "Role", "Employee","System"],
         "Country": ["Employee_Process"],
         "Things": [],
-        "Approval": ["Role","Process_Category"],
         "Facility": ["Country"],
     }
     return dict_gallery[word]
@@ -328,10 +324,21 @@ def return_global_html():
     #create json of df
     all_json = ''
     for tab, df in dict_df.items():
-        one_json = df.to_json(orient="records")
+        one_json = df.to_json(orient="records",lines=False, force_ascii=False, compression=None)
         one_json = f'"{tab}"' + ": " + one_json + ","
         all_json = all_json + one_json
     all_json = ' var data={' + all_json + "};"
+
+    #bug is caused by pyhon df to_json function
+    dict_bugged={
+        "UserDevelopment":'User Development',
+         "UserOperation":"User Operation",
+         "UserRelationship":"User Relationship",
+         "UserRelation":"User Relation",
+         "UserTeam":"User Team",
+                 }
+    for key,val in dict_bugged.items():
+        all_json=all_json.replace(key,val)
     with open(fr"bootstrap/js/data.js", "w", encoding="utf-8") as file:
         file.write(str(all_json))
 
