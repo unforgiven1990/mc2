@@ -400,23 +400,27 @@ def return_instance_img(instance, tab, imgclass):
     a_img=[]
     instance_with_space=instance.replace("_"," ")
 
-    for file_path in glob.glob(f"attachments/MC2 Data-{tab}_Attachment/*.jpg"):
-        file_name=os.path.basename(file_path).replace(".jpg","").replace("_Process Flow","")
-        #check this name for first image against this instance
-        if instance_with_space ==  file_name :
-            url= f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow.jpg'
-            image = f'<img class="{imgclass} mb-3" src="{url}" >'
-            a_img+=[image]
+    for ending in [".jpg",".png", ".webp"]:
+        for file_path in glob.glob(f"attachments/MC2 Data-{tab}_Attachment/*{ending}"):
+            file_name=os.path.basename(file_path).replace(f"{ending}","").replace("_Process Flow","")
+            #check this name for first image against this instance
+            if instance_with_space ==  file_name :
+                url= f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow{ending}'
+                image = f'<img class="{imgclass} mb-3" src="{url}" >'
+                a_img+=[image]
+            else:
+                if instance=="Get_vehicles_from_CN_or_EU_hub_to_RDC":
+                    print(instance," vs ", file_name)
 
-
-        #check this name for other images (n) against this instance
-        for potential_counter in range(10):
-            #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
-                if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
-                    url = f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}).jpg'
-                    image = f'<img class="{imgclass}" src="{url}" >'
-                    a_img += [image]
+            #check this name for other images (n) against this instance
+            for potential_counter in range(10):
+                #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
+                    if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
+                        url = f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
+                        image = f'<img class="{imgclass}" src="{url}" >'
+                        a_img += [image]
     return "".join(a_img)
+
 
 
 def return_leftvsright():

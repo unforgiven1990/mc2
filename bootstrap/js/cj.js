@@ -255,11 +255,13 @@ function update_chart2_butnotdraw(target_class){
 //draw chart in general
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
     var fit= true;
+    var animate=true;
     if(id=="cy"){
         var layout_style="cise";
     }else if (id=="cy4"){
         var layout_style="dagre";
         fit=true;
+        animate=false;
 
     }else{
         var selected_layout= $("#layoutselect").val();
@@ -357,7 +359,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             fit:fit,
             padding: 20,
             refresh:20000,
-            animate: true,
+            animate: animate,
             nodeDimensionsIncludeLabels: true,
             idealInterClusterEdgeLengthCoefficient: 1.00, //also the bigger the more far away
             nodeRepulsion: 6000, //the bigger the more far away
@@ -395,6 +397,9 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             if (id=="cy2"){
                 $("#indirect_result").append(produce_lis([node_data['id']]));
             }
+        }else if (node_data["class"]=="red"){
+            val.addClass("red");
+
         }else{
             //for chart 2 and 3
             if (id!="cy"){
@@ -445,6 +450,10 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 }
 
 
+var bugged_departments={"Europe_UserOperation_Department":'Europe_User_Operation_Department',
+                            "Europe_UserDevelopment_Department":"Europe_User_Development_Department"};
+
+
 //generate department hierarchy
 function generate_department_hierarchy(page_instance, page_class){
     // add all departments to nodes
@@ -464,7 +473,7 @@ function generate_department_hierarchy(page_instance, page_class){
         }
         var class_val='';
         if (val == page_instance){
-            class_val="currentDept"
+            class_val="red"
         }
 
 
@@ -483,8 +492,7 @@ function generate_department_hierarchy(page_instance, page_class){
 
 
     //calculate edges
-    var bugged_departments={"Europe_UserOperation_Department":'Europe_User_Operation_Department',
-                            "Europe_UserDevelopment_Department":"Europe_User_Development_Department"};
+
     $.each(all_instances, function(key, val) {
         var belongs_to=get_cell(df=data[page_class], index=val, col="Belongs to Department", tab=page_class);
         belongs_to=space2underscore(belongs_to);
@@ -638,12 +646,26 @@ function generate_class_elements(current_class, current_instance) {
 function generate_instance_elements(current_class, target_class, highlight_class) {
     var elements = []
     var all_class = get_all_class();
+    if (!checkdata(dict_cy["cy"].elements())){
+        return elements;
+    }
+
 
     //check what user has selected on the first chart
-    var aStar = dict_cy["cy"].elements().aStar({
-        root: "#" + current_class,
-        goal: "#" + target_class
-    });
+
+    try{
+        console.log("in generate_instance_elements ",dict_cy["cy"].elements());
+        cy_helper=dict_cy["cy"].elements();
+        console.log("cy no problem");
+        var aStar = cy_helper.aStar({
+            root: "#" + current_class,
+            goal: "#" + target_class
+        });
+    }catch{
+        console.log("error");
+        return elements;
+
+    }
 
     var all_traversed_nodes = aStar.path;
     var cleared_path=[];
@@ -1127,9 +1149,17 @@ $(document).ready(function() {
     if (page_class =="Department" && checkdata(page_instance)){
         var instance_elements=generate_department_hierarchy(page_instance, page_class);
         var cy4 = create_cy(id = "cy4", current_class = page_class, current_instance = page_instance, elements = instance_elements);
-        var focus=cy4.$('#'+page_instance);
-        console.log(focus);
-        cy4.fit(focus, 500);
+
+        cy.ready(function() {
+            var parent_dept=get_cell(df=data["Department"], index=page_instance, col="Belongs to Department", tab=page_class);
+            if(parent_dept in bugged_departments){
+                parent_dept=bugged_departments[parent_dept];
+            }
+            console.log("parentdept",parent_dept);
+            var focus=cy4.$('#'+page_instance+", #"+parent_dept);
+            console.log(focus);
+            cy4.fit(focus, 50);
+        });
     }
 
 
@@ -1137,14 +1167,18 @@ $(document).ready(function() {
     //update the left side
     //needs to be after cy has created
     var ul_direct= display_instance_attribute_aslist(instance=page_instance,instance_class=page_class);
+    console.log("start cy",dict_cy["cy"].elements());
     var ul_indirect= display_instance_indirect_attribute_aslist(instance=page_instance, instance_class = page_class);
+    console.log("1 cy",dict_cy["cy"].elements());
+
+
     var ul='<table class="table"><tbody>'+ ul_direct+  ul_indirect+'</tbody></table>';
     $('#left_direct').html(ul);
     //some operational bug that creates undefined word before the table
     $("#left_direct").contents().filter(function(){
         return (this.nodeType == 3);
     }).remove();
-
+    console.log("2 cy",dict_cy["cy"].elements());
 
     //only for user journey
     $(window).on('scroll', () => {
