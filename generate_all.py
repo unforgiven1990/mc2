@@ -337,12 +337,14 @@ def return_global_html():
 
 
     #create edgematrix
+    #<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    #<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
     test="""
         <!-- Cytoscape extention -->
-		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-
+		
 		<!-- Jquery for graphml -->
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+		
     """
 
     local_extension="""
