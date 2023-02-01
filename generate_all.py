@@ -343,7 +343,9 @@ def return_global_html():
 
 		<!-- Jquery for graphml -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    """
 
+    local_extension="""
 		<!-- Other iVis-at-Bilkent libraries -->
 		<script src="https://unpkg.com/layout-base@1.0.2/layout-base.js"></script>
 		<script src="https://unpkg.com/avsdf-base/avsdf-base.js"></script>
@@ -351,6 +353,17 @@ def return_global_html():
 		<script src="https://unpkg.com/cytoscape-graphml/cytoscape-graphml.js"></script>
 		<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
 	"""
+    local_extension = """
+    		<script  src="../../bootstrap/extensions/layout-base.js"></script>
+    		<script  src="../../bootstrap/extensions/avsdf-base.js"></script>
+    		<script  src="../../bootstrap/extensions/cose-base.js"></script>
+    		<script  src="../../bootstrap/extensions/cytoscape-graphml.js"></script>
+    		<script  src="../../bootstrap/extensions/dagre.js"></script>
+    	"""
+
+
+    test=test+local_extension
+
 
     meta='<meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1">'
     js_jquery = '<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>'
@@ -465,6 +478,9 @@ def return_content_instance(instance, row, tab, dict_df):
     label_indirect_attribute=return_component_small_header("2. Graph View", id="predefined_relations", h3_tag= f'data-predefined_relations="{predefined_class}"')
     label_indirect_attribute2=return_component_small_header("Result")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
+    cy4=return_cy4()
+    if tab in ["Department"]:
+        header=header+cy4
 
     spacer= return_component_spacer()
     template_card=return_template_card()
@@ -522,9 +538,11 @@ def return_component_spacer(default=0):
 def get_cy2_result():
     return "<ul id='indirect_result' class='pb-5' ></ul>"
 
-def return_indirect_chart():
-    return f"""<div id='cy2' class=' mb-3 height50 width50 background2'></div>
-"""
+def return_indirect_chart(counter=2):
+    return f"<div id='cy{counter}' class=' mb-3 height50 width50 background2'></div>"
+
+def return_cy4():
+    return f"<div id='cy4' class=' mb-3 height30 width100 background2'></div>"
 
 def return_component_small_header(text="",component_inside='', id='', h3_tag=''):
     return f'<h3 id="{id}" {h3_tag} ><b>{text}{component_inside}</b></h3>'

@@ -71,6 +71,7 @@ function get_linkable_cols(instance_class, return_type=1){
 //get bool or id of real col
 function col_linked(instance_class, col, type=2){
     var all_links_of_class = get_linkable_cols(instance_class=instance_class,return_type=1);
+
     if (checkdata(all_links_of_class)==false){
         if(type==1){// two times 1 is correct
             return false;
@@ -201,9 +202,11 @@ function get_class_columns(class_tab) {
 function get_all_instance(class_tab){
 var result=[];
 var df=data[class_tab];
+
     $.each(df, function(key, row) {
         result.push(row[class_tab]);
     });
+    console.log(class_tab,result);
     return result;
 }
 
@@ -215,10 +218,14 @@ function get_cell(df, index, col, tab){
     $.each(df, function(index_as_number, row) { //traversing through the rows of a df
         $.each(row, function(column, cell_data) { //traversing in 1 row, through the columns
             //if (col_linked(instance_class=tab, col=column) == col) { // we found the column. column matches
-            if (noforby(column, instance_class=tab) == col) {
+            if ((noforby(column, instance_class=tab) == col) || (column == col)) {
                 if (index == row[tab]) { //index matches
                     result = cell_data;
+                }  else{
+                    //console.log("not matching ",index, row[tab], cell_data);
                 }
+            }else{
+                //console.log("not matching column ",column, col);
             }
         });
     });
@@ -247,8 +254,13 @@ function update_chart2_butnotdraw(target_class){
 
 //draw chart in general
 function create_cy(id, current_class = '', current_instance = '', elements = []) {
+    var fit= true;
     if(id=="cy"){
         var layout_style="cise";
+    }else if (id=="cy4"){
+        var layout_style="dagre";
+        fit=true;
+
     }else{
         var selected_layout= $("#layoutselect").val();
         if (checkdata(selected_layout)){
@@ -340,6 +352,9 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             name: layout_style,
             spacingFactor: 1,
             avoidOverlap: true,
+            rankDir: 'TB',
+            ranker: 'network-simplex',
+            fit:fit,
             padding: 20,
             refresh:20000,
             animate: true,
@@ -429,6 +444,79 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     return cy
 }
 
+
+//generate department hierarchy
+function generate_department_hierarchy(page_instance, page_class){
+    // add all departments to nodes
+    // link all departments together
+    var elements = []
+    var all_instances=get_all_instance(class_tab=page_class);
+    var helper_array=[];
+
+
+    //calculate nodes
+    $.each(all_instances, function(key, val) {
+        if (current_class == val && checkdata(current_instance)) {
+            var label =  underscore2space(val)+ " =\n"+ underscore2space(current_instance)   ;
+        } else {
+           //label for cy, shorter, more compat
+            var label = underscore2space(val).replace(" ","\n");
+        }
+        var class_val='';
+        if (val == page_instance){
+            class_val="currentDept"
+        }
+
+
+        elements.push({
+            data: {
+                'id': val,
+                'label': label,
+                'href': "../../page/" + page_class + "/" + val + ".html",
+                'class':class_val
+            }
+        });
+        helper_array.push(val);
+        //elements.push({data: {'id':val , 'label': label, 'href':"../../page/"+val+"/"+val+".html"} });
+    });
+    elements=elements.reverse()
+
+
+    //calculate edges
+    var bugged_departments={"Europe_UserOperation_Department":'Europe_User_Operation_Department',
+                            "Europe_UserDevelopment_Department":"Europe_User_Development_Department"};
+    $.each(all_instances, function(key, val) {
+        var belongs_to=get_cell(df=data[page_class], index=val, col="Belongs to Department", tab=page_class);
+        belongs_to=space2underscore(belongs_to);
+
+
+        if (helper_array.includes(belongs_to) ){
+            // found the column without bug
+        }else if ( belongs_to in  bugged_departments){
+            // found the column with bug
+            belongs_to=bugged_departments[belongs_to];
+        }else{
+            //did not found the column
+            console.log(val," not here ",belongs_to);
+            return;
+        }
+
+        console.log(val," here ",belongs_to);
+            elements.push({
+                data: {
+                    'id': belongs_to+'_'+val, // changing display name to display id removes double edges
+                    'source': belongs_to,
+                    'target': val,
+                }
+            });
+
+
+    });
+
+    console.log("here", elements);
+    return elements;
+
+}
 
 
 
@@ -943,7 +1031,7 @@ function update_select_business(){
 
 //update user view or employee perspective select
 function update_select_perspective(){
-    $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Process_Category">Employee Perspective</option>');
+    $("#select_perspective").html('<option value="User_Journey">User Perspective</option><option value="Employee_Journey">Employee Perspective</option>');
 
     var selected_persp= $("#main").data("forperspective");
     $("#select_perspective").val(selected_persp);
@@ -1032,6 +1120,18 @@ $(document).ready(function() {
             cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
           }
     }
+
+
+    //add department hierarchy for people section
+    /** **/
+    if (page_class =="Department" && checkdata(page_instance)){
+        var instance_elements=generate_department_hierarchy(page_instance, page_class);
+        var cy4 = create_cy(id = "cy4", current_class = page_class, current_instance = page_instance, elements = instance_elements);
+        var focus=cy4.$('#'+page_instance);
+        console.log(focus);
+        cy4.fit(focus, 500);
+    }
+
 
 
     //update the left side

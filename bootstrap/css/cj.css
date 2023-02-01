@@ -76,6 +76,9 @@ margin-bottom: 3vh;
   width: 100% !important;
 }
 
+#cy4{
+  background-color:white;
+}
 
 
 .card-header {
@@ -117,7 +120,12 @@ float:left;
 
 .height50{
   height: 80%!important;
-  margin:opx;
+  margin: auto;
+}
+
+.height30{
+  height: 50%!important;
+  margin:auto;
 }
 
 
