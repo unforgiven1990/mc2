@@ -58,13 +58,16 @@ def get_dict_df():
 
     for excel_data_raw in glob.glob("*.xlsx"):
         if excel_data_raw !="class_map.xlsx":
-            dict_df = cleanup(pd.read_excel(excel_data_raw, sheet_name=None))
+            dict_df = cleanup(pd.read_excel(excel_data_raw, sheet_name=None), excel_data_raw=excel_data_raw)
             wb = openpyxl.load_workbook(excel_data_raw)
             dict_df_wb_pair= [dict_df,wb]
             return dict_df_wb_pair
 
 def space_replacer(word):
-    return word.replace(" ","_")
+    if isinstance(word,str):
+        return word.replace(" ","_")
+    else:
+        return word
 
 def underscore_replacer(word):
     return word.replace("_"," ")
@@ -76,7 +79,7 @@ def generate_lark_to_mc2_link():
         print(f'HYPERLINK(CONCATENATE("https://unforgiven1990.github.io/mc2/page/","{tab}","/",SUBSTITUTE([{tab}]," ","_"),".html"), "LINK")')
 
 
-def cleanup(dict_df):
+def cleanup(dict_df, excel_data_raw):
 
     """
     iterate through all tabs, changes key items with comma to other sign
@@ -134,7 +137,27 @@ def cleanup(dict_df):
         df=df.replace(dict_to_replace,inplace=False,regex=True)
         new_dict_df[tab]=df
 
+    # replace related document link hyperlink with real title
+    for tab in["Employee_Process"]:
+        df_tab=new_dict_df[tab]
+
+        #open the data with another library to get hyperlink
+        wb = openpyxl.load_workbook(excel_data_raw)
+        ws = wb[tab]
+
+        for column in ["Related Document"]:
+            column_index = df_tab.columns.get_loc(column)
+            for index, cell_data in df_tab[column].items():
+                print(index, cell_data)
+                if pd.notna(cell_data) :
+                    hyperlink = ws.cell(row=index+2, column=column_index+1).hyperlink.target
+                    #value = ws.cell(row=index+2, column=column_index+1).value
+                    hyperlink_display=hyperlink.replace("https://","")
+                    df_tab.at[index,column]=f"<a href='{hyperlink}' target='_blank'>{hyperlink_display}</a>"
+
     return new_dict_df
+
+
 
 
 def return_string_gallery(word):
@@ -699,7 +722,8 @@ def generate_linkabe_column():
                             result = result + 0
                             itemchecked=itemchecked+1
                 if itemchecked!=0:
-                    df_result.at[tab+"_"+col,tab_compare]=result/itemchecked
+                    print(type(tab),type(col), col)
+                    df_result.at[tab+"_"+str(col),tab_compare]=result/itemchecked
 
                     #hard coded edges to exclude
                     if col in [ "Has Leader", "Is Leader of Department"]: #todo hard coded label here
@@ -877,6 +901,9 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
     all_section=""
     for journey_counter, (key, row) in enumerate(df_user_or_employee_journey.iterrows()):
         journey_counter=0#quick and dirty way to reset it for h2 labeling
+        if pd.isna(key):
+            continue
+
         if one_bm in key:
             a_user_process=df_user_or_employee_journey.at[key,process_display_name]
 
