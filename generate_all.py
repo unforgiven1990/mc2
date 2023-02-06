@@ -144,7 +144,25 @@ def cleanup(dict_df, excel_data_raw):
             print(dict_to_replace)
 
         #replace all in one
-        df.replace(dict_to_replace,inplace=True,regex=True)
+        if True:
+            df.replace(dict_to_replace,inplace=True,regex=True)
+        else:
+            #replace row by row
+            for col in df.columns: # for each column
+                for key,entirecell in df[col].items(): #for each index, value pair
+                    try:
+                        a_val=entirecell.splt(",")
+                    except:
+                        #value is not string, nothing to replace
+                        continue
+
+                    a_val_replaced=[]
+                    for val in a_val: #for each a b c in "a,b,c"
+                        #multiple values
+                        if val in dict_to_replace:
+                            a_val_replaced+=[dict_to_replace[val]]
+                    else:
+                        df.at[key,entirecell] = ",".join(a_val_replaced)
 
         new_dict_df[tab]=df
         if tab=="Employee":
@@ -602,7 +620,10 @@ def return_content_instance(instance, row, tab, dict_df):
         combined_img+= grid_subprocess
 
     #create all image combination
-    grid3=grid3.format(grid3label,"".join(combined_img))
+    if combined_img:
+        grid3=grid3.format(grid3label,"".join(combined_img))
+    else:
+        grid3=""
 
 
     #process_image=f'<img id="instance_img" src="{instance_img_url}" alt="{instance} Attached Image from Bitable">'+spacer if instance_img_url else ""
@@ -984,8 +1005,9 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
                         #image=f'<img class="journeyimg" src="../../attachments/MC2 Data-{process_name_without}_Attachment/{process.replace("_"," ")}_Process Flow.jpg" >'
 
                         #get summary of the process
-                        df_process=dict_df[process_id_name]
+
                         try:
+                            df_process = dict_df[process_id_name]
                             summary=df_process.at[process, "Process Summary"]
                         except:
                             print(journey_counter, key, process_counter, process)
