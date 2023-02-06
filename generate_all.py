@@ -110,19 +110,16 @@ def cleanup(dict_df, excel_data_raw):
     forbidden_chars={**forbidden_chars}
 
 
-    #for each tab in df
+    #for each tab in df- replace index
     for tab, df in dict_df.items():
-        #create a new helper column
+        #create a new helper column to replace index
         df["RemoveMe"]=df[tab].copy()
 
         #copied_index_item is potentially wrong and needs to be replaced
         for copied_index_item, (index, row) in zip(df["RemoveMe"],df.iterrows()):
+            #if index is none
             if pd.isna(copied_index_item):
                 continue
-
-            """for forbidden_char in forbidden_chars:
-                if forbidden_char not in item: #item is already clean, no need to cleanup
-                    continue"""
 
             #replace all index data = index
             correct_item=copied_index_item # starting position
@@ -132,12 +129,10 @@ def cleanup(dict_df, excel_data_raw):
                     correct_item=correct_item.replace(forbidden_char,toreplace)
                 except:
                     correct_item=correct_item
-            df.at[index,"RemoveMe"]=correct_item
-            dict_to_replace[copied_index_item]=correct_item
+            df.at[index,"RemoveMe"]=fr"{correct_item}"
+            dict_to_replace[copied_index_item]=fr"{correct_item}"
 
-            #replace all non index data, =row
-
-        # create a new helper column
+        # actually replace index
         df[tab] = df["RemoveMe"]
         df.drop('RemoveMe', axis=1,inplace=True)
 
@@ -149,12 +144,12 @@ def cleanup(dict_df, excel_data_raw):
             print(dict_to_replace)
 
         #replace all in one
-        df=df.replace(dict_to_replace,inplace=False,regex=True)
+        df.replace(dict_to_replace,inplace=True,regex=True)
 
         new_dict_df[tab]=df
         if tab=="Employee":
             pass
-            #df.to_excel("rasmus after.xlsx")
+            df.to_excel("rasmus after.xlsx")
 
     # replace related document link hyperlink with real title
     for tab in["Employee_Process", "User_Process", ]:
