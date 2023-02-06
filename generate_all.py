@@ -58,7 +58,7 @@ def get_dict_df():
 
     for excel_data_raw in glob.glob("*.xlsx"):
         if excel_data_raw !="class_map.xlsx":
-            dict_df = cleanup(pd.read_excel(excel_data_raw, sheet_name=None), excel_data_raw=excel_data_raw)
+            dict_df = cleanup(pd.read_excel(excel_data_raw, sheet_name=None, engine="openpyxl"), excel_data_raw=excel_data_raw)
             wb = openpyxl.load_workbook(excel_data_raw)
             dict_df_wb_pair= [dict_df,wb]
             return dict_df_wb_pair
@@ -100,6 +100,16 @@ def cleanup(dict_df, excel_data_raw):
                      " ":'_', #still empty space in tab data not converted
                      }
 
+    dict_bugged = {#todo bugged doesn't work
+        "UserDevelopment": 'User Development',
+        "UserOperation": "User Operation",
+        "UserRelationship": "User Relationship",
+        "UserRelation": "User Relation",
+        "UserTeam": "User Team",
+    }
+    forbidden_chars={**forbidden_chars}
+
+
     #for each tab in df
     for tab, df in dict_df.items():
         #create a new helper column
@@ -118,7 +128,7 @@ def cleanup(dict_df, excel_data_raw):
             correct_item=copied_index_item # starting position
             for forbidden_char, toreplace in forbidden_chars.items():
                 try:
-                    correct_item = " ".join(correct_item.split()) #doing this removes double space in titles
+                    #correct_item = " ".join(correct_item.split()) #doing this removes double space in titles
                     correct_item=correct_item.replace(forbidden_char,toreplace)
                 except:
                     correct_item=correct_item
@@ -127,15 +137,24 @@ def cleanup(dict_df, excel_data_raw):
 
             #replace all non index data, =row
 
-
         # create a new helper column
         df[tab] = df["RemoveMe"]
         df.drop('RemoveMe', axis=1,inplace=True)
 
-    # complete df replace
+
+    # complete df replace why do you even need it?
     for tab, df in dict_df.items():
+        if tab == "Employee":
+            #df.to_excel("rasmus before.xlsx")
+            print(dict_to_replace)
+
+        #replace all in one
         df=df.replace(dict_to_replace,inplace=False,regex=True)
+
         new_dict_df[tab]=df
+        if tab=="Employee":
+            pass
+            #df.to_excel("rasmus after.xlsx")
 
     # replace related document link hyperlink with real title
     for tab in["Employee_Process", "User_Process", ]:
@@ -343,15 +362,25 @@ def return_global_html():
     #create data
     dict_df,wb = get_dict_df()
 
-    #create json of df
+    #create json df by df
     all_json = ''
     for tab, df in dict_df.items():
-        one_json = df.to_json(orient="records",lines=False, force_ascii=False, compression=None)
-        one_json = f'"{tab}"' + ": " + one_json + ","
-        all_json = all_json + one_json
+        df.to_excel(f"helper/{tab}.xlsx")
+        one_df = df.to_json(orient="records",lines=False, force_ascii=False, compression=None)
+        one_df = f'"{tab}"' + ": " + one_df + ","
+        all_json = all_json + one_df
+
     all_json = ' var data={' + all_json + "};"
 
+
+
     #bug is caused by pyhon df to_json function
+    """bug is that some
+    1. some department in bitable not linked 
+    2. in bitable: user operation, in json useroperation
+    when transition from df to json it klebs zusammen to Head of UserOperation Netherlands
+    """
+
     dict_bugged={
         "UserDevelopment":'User Development',
          "UserOperation":"User Operation",
@@ -359,10 +388,14 @@ def return_global_html():
          "UserRelation":"User Relation",
          "UserTeam":"User Team",
                  }
+    dict_bugged = {}
     for key,val in dict_bugged.items():
         all_json=all_json.replace(key,val)
     with open(fr"bootstrap/js/data.js", "w", encoding="utf-8") as file:
         file.write(str(all_json))
+
+
+
 
 
     #create edgematrix

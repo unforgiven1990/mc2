@@ -454,6 +454,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
 
 var bugged_departments={"Europe_UserOperation_Department":'Europe_User_Operation_Department',
                             "Europe_UserDevelopment_Department":"Europe_User_Development_Department"};
+var bugged_departments={};
 
 
 //generate department hierarchy
