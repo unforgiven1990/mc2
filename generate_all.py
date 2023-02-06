@@ -138,7 +138,7 @@ def cleanup(dict_df, excel_data_raw):
         new_dict_df[tab]=df
 
     # replace related document link hyperlink with real title
-    for tab in["Employee_Process"]:
+    for tab in["Employee_Process", "User_Process", ]:
         df_tab=new_dict_df[tab]
 
         #open the data with another library to get hyperlink
@@ -148,7 +148,6 @@ def cleanup(dict_df, excel_data_raw):
         for column in ["Related Document"]:
             column_index = df_tab.columns.get_loc(column)
             for index, cell_data in df_tab[column].items():
-                print(index, cell_data)
                 if pd.notna(cell_data) :
                     hyperlink = ws.cell(row=index+2, column=column_index+1).hyperlink.target
                     #value = ws.cell(row=index+2, column=column_index+1).value
@@ -442,7 +441,7 @@ def return_instance_img(instance, tab, imgclass):
                 a_img+=[image]
             else:
                 if instance=="Get_vehicles_from_CN_or_EU_hub_to_RDC":
-                    print(instance," vs ", file_name)
+                    pass
 
             #check this name for other images (n) against this instance
             for potential_counter in range(10):
@@ -504,14 +503,14 @@ def return_content_instance(instance, row, tab, dict_df):
     real_instance = instance
 
     cy1, component_cy_js = return_component_cy(dict_df=dict_df, highlight_classes=[tab],  only_nodes=[x for x in dict_df.keys()], height="height50 width50 background2")
-    label_direct_attribute=return_component_small_header("1. Table View")
+    label_direct_attribute=return_component_small_header("Table View")
 
     button1=return_template_dropdown(id="filter_class",text="Class")
     button2=return_template_dropdown(id="filter_instance",text="Instance")
 
     label_direct_compare="<div class='row' >"+button1+button2 + "</div><div id='versus'></div>"
     predefined_class=",".join(return_string_indirect(tab))
-    label_indirect_attribute=return_component_small_header("2. Graph View", id="predefined_relations", h3_tag= f'data-predefined_relations="{predefined_class}"')
+    label_indirect_attribute=return_component_small_header("Graph View", id="predefined_relations", h3_tag= f'data-predefined_relations="{predefined_class}"')
     label_indirect_attribute2=return_component_small_header("Result")
     header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
     cy4=return_cy4()
@@ -548,13 +547,41 @@ def return_content_instance(instance, row, tab, dict_df):
     grid1=return_grid2(other_class="", card_class="background1")
     grid2=return_grid2(other_class="mb-0", card_class="background2")
     leftrightgrid=return_leftvsright()
+
+
     process_image=return_instance_img(instance=instance, tab=tab, imgclass="instance_img")
+    grid3label=return_component_small_header("Main Process", id="", h3_tag= f'')
+    grid3 = return_grid2(other_class="mb-0", card_class="background2")
+
+
+    a_subprocess_img=[]
+    # get subprocees pictures
+    if tab in ["Employee_Process"]:
+        a_subprocesses=dict_df[tab].at[instance,"Has Subprocess"]
+        if isinstance(a_subprocesses,str):
+            a_subprocesses=a_subprocesses.split(",")
+            for subprocess in a_subprocesses:
+                if pd.notna(subprocess):
+                    #get picture
+                    subprocess_image = return_instance_img(instance=subprocess, tab=tab, imgclass="instance_img")
+                    a_subprocess_img+=[f"<h4><a href='{return_word_instance_url(class_tab=tab,instance=subprocess)}'>{len(a_subprocess_img)+1}. Sub Process: {underscore_replacer(subprocess)}</a></h4>{subprocess_image}"]
+
+    #create grid
+    combined_img = process_image #process has only one picture
+    if len(a_subprocess_img)>0: #process has at least 1 picture in subprocess
+        helper=[f"<div class='col col-md-4'>{x}</div>" for x in a_subprocess_img]
+        grid_subprocess='<div class="row mt-5">{}</div>'.format("".join(helper))
+        combined_img+= grid_subprocess
+
+    #create all image combination
+    grid3=grid3.format(grid3label,"".join(combined_img))
+
 
     #process_image=f'<img id="instance_img" src="{instance_img_url}" alt="{instance} Attached Image from Bitable">'+spacer if instance_img_url else ""
-    direct_part=process_image+ grid1.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
+    direct_part= grid1.format(label_direct_attribute, leftrightgrid.format(direct_part_left,direct_part_right))
     indirect_part= grid2.format(label_indirect_attribute, leftrightgrid.format(explainer, layout_select+fullscreen_button+modal) ) +  f"<div class='background2'>{return_grid1().format(cy1,cy2)}</div>" +  f"<div class='background2'>{return_grid1().format('',cy2_text_result)}</div>"
 
-    content=header + spacer+direct_part + spacer+indirect_part+ spacer
+    content=header + spacer+grid3+direct_part + spacer+indirect_part+ spacer
     return template.format(content=content, jsinclude=component_cy_js)
 
 
@@ -609,7 +636,6 @@ def return_component_header(df,tab, dict_df, instance, custom_header_text=""):
         if tab not in ["User_Process", "Employee_Process"]: #todo hardcoded
             explainer = f'<p class="text-secondary">{return_string_component(tab)}</p>'
         else:
-            print(tab)
             explainer = f''
     if not custom_header_text:
         header_text= f'{instance.replace("_"," ")}' if instance else "All "+tab.replace("_"," ")
@@ -722,7 +748,6 @@ def generate_linkabe_column():
                             result = result + 0
                             itemchecked=itemchecked+1
                 if itemchecked!=0:
-                    print(type(tab),type(col), col)
                     df_result.at[tab+"_"+str(col),tab_compare]=result/itemchecked
 
                     #hard coded edges to exclude
@@ -935,7 +960,6 @@ def return_content_user_journey(dict_df, tab="User_Journey", one_bm="Subscriptio
                         try:
                             summary=df_process.at[process, "Process Summary"]
                         except:
-                            print(df_process)
                             print(journey_counter, key, process_counter, process)
                             summary=""
                         sectionvalue = sectionvalue + f"<section id='{process_display}'><h2>{link}</h2>{image}{summary}</section>"
@@ -1079,7 +1103,6 @@ def get_all_wikis(id,driver):
         #div1=tag.select_one('.tree-node-wrapper.wiki-tree-normal-node')
         #div2=div1.select_one('.tree-item')
         div2=tag
-        print(tag)
 
         token=div2.attrs["data-token"]
         title=div2.attrs["data-title"]
@@ -1113,13 +1136,11 @@ def rekursive_crawl_wiki(start_id="", driver="", found_result=[]):
 
     for found_id in get_all_wikis(id=start_id, driver=driver):
         """a found url can be already known, new and not child node, new and child node"""
-        print(f"currently at url {start_id}, checking found_url {found_id}")
         if found_id not in found_result:#if found, the the wik must be child of page article
             #found_result=found_result.union(get_all_wikis(found_url), found_result=found_result)
             found_result+=[found_id]
             found_result+=[rekursive_crawl_wiki(start_id=found_id, driver=driver, found_result=found_result)]
 
-    print(found_result)
     return found_result
 
 

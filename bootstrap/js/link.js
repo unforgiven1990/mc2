@@ -14,10 +14,10 @@ var link = {
         "For Business Model": "Business_Model"
     },
     "Employee_Process": {
-        "Matches User Process": "User_Process",
+        "For User Process": "User_Process",
         "Has Subprocess": "Employee_Process",
-        "Implements Capabilities": "Capability",
-        "Owned by Role": "Role",
+        "For Capabilities": "Capability",
+        "Operated by Role": "Role",
         "Uses System": "System"
     },
     "Country": {
@@ -45,7 +45,6 @@ var link = {
         "Has Departments": "Department"
     },
     "Employee": {
-        "Belongs to Department": "Department",
         "Has Role": "Role",
         "Works in City": "City"
     },
