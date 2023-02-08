@@ -5,16 +5,13 @@ var link = {
         "Is Part of Business Model": "Business_Model"
     },
     "User_Process": {
-        "Belongs to User Journey Part": "User_Journey",
-        "Matches Employee Process": "Employee_Process"
+        "Belongs to User Journey Part": "User_Journey"
     },
     "Process_Category": {
         "For User Journey": "User_Journey",
-        "Has Employee Processes": "Employee_Process",
         "For Business Model": "Business_Model"
     },
     "Employee_Process": {
-        "For User Process": "User_Process",
         "Has Subprocess": "Employee_Process",
         "For Capabilities": "Capability",
         "Operated by Role": "Role",
@@ -34,7 +31,10 @@ var link = {
     },
     "Capability": {
         "Implemented by Process": "Employee_Process",
-        "Implements Strategy": "Strategy"
+        "Implements Strategy": "Strategy",
+        "Defined by Department": "Department",
+        "SOP written by": "Employee",
+        "Belongs to Topic": "Topic"
     },
     "Department": {
         "Belongs to Department": "Department",
@@ -66,5 +66,8 @@ var link = {
     },
     "Facility": {
         "Belongs to City": "City"
+    },
+    "Topic": {
+        "For Capability": "Capability"
     }
 }

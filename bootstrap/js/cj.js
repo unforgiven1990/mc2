@@ -508,11 +508,11 @@ function generate_department_hierarchy(page_instance, page_class){
             belongs_to=bugged_departments[belongs_to];
         }else{
             //did not found the column
-            console.log(val," not here ",belongs_to);
+            //console.log(val," not here ",belongs_to);
             return;
         }
 
-        console.log(val," here ",belongs_to);
+        //console.log(val," here ",belongs_to);
             elements.push({
                 data: {
                     'id': belongs_to+'_'+val, // changing display name to display id removes double edges
@@ -524,7 +524,7 @@ function generate_department_hierarchy(page_instance, page_class){
 
     });
 
-    console.log("here", elements);
+    //console.log("here", elements);
     return elements;
 
 }
@@ -657,15 +657,15 @@ function generate_instance_elements(current_class, target_class, highlight_class
     //check what user has selected on the first chart
 
     try{
-        console.log("in generate_instance_elements ",dict_cy["cy"].elements());
+        //console.log("in generate_instance_elements ",dict_cy["cy"].elements());
         cy_helper=dict_cy["cy"].elements();
-        console.log("cy no problem");
+        //console.log("cy no problem");
         var aStar = cy_helper.aStar({
             root: "#" + current_class,
             goal: "#" + target_class
         });
     }catch{
-        console.log("error");
+        //console.log("error");
         return elements;
 
     }
@@ -913,9 +913,9 @@ function produce_li_for_word(row_index,cell_data){
     var dot = row_index!="" ? ": ": "";
     row_index=row_index.replace("_", " ");
 
-    console.log("start instance url ",cell_data, row_index);
+    //console.log("start instance url ",cell_data, row_index);
     var url = get_instance_url(cell_data);
-    console.log("finish instance url ",cell_data, row_index,url);
+    //console.log("finish instance url ",cell_data, row_index,url);
 
     if (url !=''){
         var li="<li class='noli'>"+row_index+dot+"<a href='"+url+"'>"+underscore2space(cell_data)+"</a></li>";
@@ -1163,9 +1163,9 @@ $(document).ready(function() {
                 //parent_dept=bugged_departments[parent_dept];
             }
             parent_dept=space2underscore(parent_dept); //to correct bug, should not be here
-            console.log("parentdept",parent_dept);
+            //console.log("parentdept",parent_dept);
             var focus=cy4.$('#'+page_instance+", #"+parent_dept);
-            console.log(focus);
+            //console.log(focus);
             cy4.fit(focus, 50);
         });
     }
@@ -1175,9 +1175,9 @@ $(document).ready(function() {
     //update the left side
     //needs to be after cy has created
     var ul_direct= display_instance_attribute_aslist(instance=page_instance,instance_class=page_class);
-    console.log("start cy",dict_cy["cy"].elements());
+    //console.log("start cy",dict_cy["cy"].elements());
     var ul_indirect= display_instance_indirect_attribute_aslist(instance=page_instance, instance_class = page_class);
-    console.log("1 cy",dict_cy["cy"].elements());
+    //console.log("1 cy",dict_cy["cy"].elements());
 
 
     var ul='<table class="table"><tbody>'+ ul_direct+  ul_indirect+'</tbody></table>';
@@ -1186,7 +1186,7 @@ $(document).ready(function() {
     $("#left_direct").contents().filter(function(){
         return (this.nodeType == 3);
     }).remove();
-    console.log("2 cy",dict_cy["cy"].elements());
+    //console.log("2 cy",dict_cy["cy"].elements());
 
     //only for user journey
     $(window).on('scroll', () => {

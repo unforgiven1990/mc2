@@ -167,7 +167,7 @@ def cleanup(dict_df, excel_data_raw):
         new_dict_df[tab]=df
         if tab=="Employee":
             pass
-            df.to_excel("rasmus after.xlsx")
+            #df.to_excel("rasmus after.xlsx")
 
     # replace related document link hyperlink with real title
     for tab in["Employee_Process", "User_Process", ]:
@@ -180,8 +180,12 @@ def cleanup(dict_df, excel_data_raw):
         for column in ["Related Document"]:
             column_index = df_tab.columns.get_loc(column)
             for index, cell_data in df_tab[column].items():
-                if pd.notna(cell_data) :
-                    hyperlink = ws.cell(row=index+2, column=column_index+1).hyperlink.target
+                if pd.notna(cell_data) and cell_data is not None:
+                    print(cell_data)
+                    try:
+                        hyperlink = ws.cell(row=index+2, column=column_index+1).hyperlink.target
+                    except:
+                        hyperlink=cell_data
                     #value = ws.cell(row=index+2, column=column_index+1).value
                     hyperlink_display=hyperlink.replace("https://","")
                     df_tab.at[index,column]=f"<a href='{hyperlink}' target='_blank'>{hyperlink_display}</a>"
@@ -203,6 +207,7 @@ def return_string_gallery(word):
         "System":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblkrJ6NVdCbc10a&view=vewmLZijxy",
         "Strategy": "https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbleijKoxmfs8WXB&view=vewZfdR1ir",
         "City":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblVk7GzlSl7A3fK&view=vewppJl3ro",
+        "Topic":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblj5cHr1kISQ7C0&view=vewJsgQtHI",
         "KnowHow":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl2nnVvMNfVLxWB&view=vewxRkGmvV",
         "Car":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIjUl8dRCbolCI&view=vewEEtBGbz",
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vew2GwzJXf",
@@ -239,6 +244,7 @@ def return_string_indirect(word):
         "Country": ["Employee_Process"],
         "Things": [],
         "Facility": ["Country"],
+        "Topic": ["Employee_Process"],
     }
     return dict_gallery[word]
 
@@ -264,6 +270,7 @@ def return_string_icon(word):
         "People": "fa-users",
         "Strategy": "fa-compass",
         "City":"fa-location-dot",
+        "Topic":"fa-chart-simple",
         "KnowHow":"fa-lightbulb",
         "Car":"fa-car",
         "KPI":"fa-chart-simple",
@@ -300,6 +307,7 @@ def return_string_component(word):
         "KPI": "This view lists all relevant KPIs for their processes.",
         "Strategy": "This view shows what high level Strategies exists and which Processes implements these Strategies.",
         "City":"The location view shows what infrastructure is there and which employee is here.",
+        "Topic":"The location view shows what infrastructure is there and which employee is here.",
         "KnowHow":"What Other Companies are doing, how NIO china is doing, what experiences we have learned",
         "Car":"What model exists for different country and business model",
         "Business_Model":"The location view shows what form of ownership user can have.",
@@ -331,6 +339,7 @@ def return_string_editurl(word):
         "Value":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIoyKb5UMTmu09&view=vewRvuZf3B",
         "Strategy": "https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbleijKoxmfs8WXB&view=vewj6vLShZ",
         "City":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblVk7GzlSl7A3fK&view=vewppJl3ro",
+        "Topic":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblj5cHr1kISQ7C0&view=vewJsgQtHI",
         "KnowHow":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tbl2nnVvMNfVLxWB&view=vewYJshw2X",
         "Car":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblIjUl8dRCbolCI&view=vewYO6qS8t",
         "KPI":"https://nio.feishu.cn/wiki/wikcnHtTpp2T1YilHB3jiT3tiLf?table=tblKMxqrBjWmaw7f&view=vewAteOLwS",
@@ -348,7 +357,7 @@ def return_string_editurl(word):
 def return_global_navbar():
     dict_nav = {
         "People": [ "Employee", "Role" ,"Department","Department_Category"],
-        "Strategy": ["Strategy", "Capability", "Business_Model"],
+        "Strategy": ["Topic","Strategy", "Capability", "Business_Model"],
         "Process": ["User_Journey","User_Process", "Process_Category","Employee_Process"],
         "Things": [ "Country","City", "Car", "Facility", "System"],
     }
@@ -476,6 +485,8 @@ def return_global_html():
 def return_instance_img(instance, tab, imgclass):
     a_img=[]
     instance_with_space=instance.replace("_"," ")
+    a_multiple=[]
+    a_multiple+=[f"({x})" for x in range(10)]
 
     for ending in [".jpg",".png", ".webp"]:
         for file_path in glob.glob(f"attachments/MC2 Data-{tab}_Attachment/*{ending}"):
@@ -483,19 +494,21 @@ def return_instance_img(instance, tab, imgclass):
             #check this name for first image against this instance
             if instance_with_space ==  file_name :
                 url= f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow{ending}'
-                image = f'<img class="{imgclass} mb-3" src="{url}" >'
-                a_img+=[image]
-            else:
-                if instance=="Get_vehicles_from_CN_or_EU_hub_to_RDC":
-                    pass
+                a_img+=[f'<img class="{imgclass} mb-3" src="{url}" >']
 
-            #check this name for other images (n) against this instance
-            for potential_counter in range(10):
-                #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
-                    if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
+
+                #check this name for other images (n) against this instance
+                for potential_counter in range(10):
+                    #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
+                    py_url = f'attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
+                    if os.path.isfile(py_url):
+                    #if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
                         url = f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
-                        image = f'<img class="{imgclass}" src="{url}" >'
-                        a_img += [image]
+                        a_img += [f'<img class="{imgclass}" src="{url}" >']
+
+
+            else:
+                pass
     return "".join(a_img)
 
 
@@ -777,7 +790,7 @@ def generate_linkabe_column():
     df_result=pd.DataFrame()
     #dict_df,wb=get_raw_dict_df()#get raw dict df, because dict df because cleanup replaces the string and data
     dict_df,wb=get_dict_df()#get raw dict df, because dict df because cleanup replaces the string and data
-    confidence_level=0.7
+    confidence_level=0.6
     dict_result={}
 
     for tab,df in dict_df.items():#source tab
@@ -789,6 +802,13 @@ def generate_linkabe_column():
                 for cell_array in df[col]:
                     if not isinstance(cell_array, str): #continue if we data is float
                         continue
+
+                    if not cell_array:
+                        continue
+
+                    if pd.isna(cell_array):
+                        continue
+
                     for cell in cell_array.split(","): #todo split by comma could be messed up with uncleaned data
                         if cell in DataSeries.values:
                             result=result+1
@@ -796,6 +816,8 @@ def generate_linkabe_column():
                         else:
                             result = result + 0
                             itemchecked=itemchecked+1
+
+
                 if itemchecked!=0:
                     df_result.at[tab+"_"+str(col),tab_compare]=result/itemchecked
 
@@ -1081,8 +1103,20 @@ def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], h
 
 
 def create_html():
-    #classes
+    #init
     dict_df,wb=get_dict_df()
+
+
+    #calculate progress tracking
+    # by By department Who has finished how many
+    """
+    1. loop over all process
+    2. filter out things that I created
+    3. group by Department
+    """
+
+
+    # classes
     dict_extrawurst = {}
     for tab, df in dict_df.items():
         Path(f"page/{tab}").mkdir(parents=True, exist_ok=True)
@@ -1117,7 +1151,8 @@ def create_html():
 
 
     #user journey specific Page, this comes after the general creation and overwrites the class html pages
-    for user_employee_journey in ["User_Journey", "Process_Category"]:
+    #for user_employee_journey in ["User_Journey", "Process_Category"]:
+    for user_employee_journey in []: #no user journey override
         a_bm = ["Purchase", "Subscription", "Op-Leasing", "Fin-Leasing"]
         for one_bm in a_bm:
             Path(f"page/{user_employee_journey}").mkdir(parents=True, exist_ok=True)
