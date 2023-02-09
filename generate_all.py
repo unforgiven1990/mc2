@@ -489,26 +489,26 @@ def return_instance_img(instance, tab, imgclass):
     a_multiple+=[f"({x})" for x in range(10)]
 
     for ending in [".jpg",".png", ".webp"]:
-        for file_path in glob.glob(f"attachments/MC2 Data-{tab}_Attachment/*{ending}"):
-            file_name=os.path.basename(file_path).replace(f"{ending}","").replace("_Process Flow","")
-            #check this name for first image against this instance
-            if instance_with_space ==  file_name :
-                url= f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow{ending}'
-                a_img+=[f'<img class="{imgclass} mb-3" src="{url}" >']
+        for file_path in glob.glob(f"attachments/Process Standardization Input-{tab}_Attachment/*{ending}"):
+            for multiple in ["","(1)","(2)","(3)","(4)"]:
+                file_name=os.path.basename(file_path).replace(f"{ending}","").replace(f"_Process Flow{multiple}","")
+                #check this name for first image against this instance
+                if instance_with_space ==  file_name :
+                    url= f'../../attachments/Process Standardization Input-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow{multiple}{ending}'
+                    a_img+=[f'<img class="{imgclass} mb-3" src="{url}" >']
 
 
                 #check this name for other images (n) against this instance
-                for potential_counter in range(10):
-                    #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
-                    py_url = f'attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
-                    if os.path.isfile(py_url):
-                    #if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
-                        url = f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
-                        a_img += [f'<img class="{imgclass}" src="{url}" >']
+                if False:
+                    for potential_counter in range(3):
+                        #if file_name[-1]==")" and file_name[-3]=="(" and str(potential_counter) == str(file_name[-2]):#this means the
+                        py_url = f'attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
+                        if os.path.isfile(py_url):
+                        #if  file_name.replace(instance_with_space,"") == f"({potential_counter})":
+                            url = f'../../attachments/MC2 Data-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow({potential_counter}){ending}'
+                            a_img += [f'<img class="{imgclass}" src="{url}" >']
 
 
-            else:
-                pass
     return "".join(a_img)
 
 
@@ -784,7 +784,7 @@ def get_user_journey_banner(user_journey_instance):
                 return f"../../img/{file_name}"
     return ""
 
-
+dict_link={}
 #calculate then linkable column once, then reuse it again in python and javascript
 def generate_linkabe_column():
     df_result=pd.DataFrame()
@@ -836,13 +836,16 @@ def generate_linkabe_column():
     #df_result.to_excel("link.xlsx")#store as excel
 
 
+    #save as global variable
+    global dict_link
+    dict_link=dict_result
+
     #store it as json
     json_result = json.dumps(dict_result, indent=4)
     global link
     link = dict_result
     with open(fr"bootstrap/js/link.js", "w", encoding="utf-8") as file:
         file.write(f"var link = {json_result}")
-
     return df_result
 
 
@@ -1102,6 +1105,11 @@ def return_component_cy(dict_df, only_nodes=[],highlight_classes=["Employee"], h
     return [cy,f""]
 
 
+def reverse_dict(my_dict):
+    inverted_dict = {value: key for key, value in my_dict.items()}
+    return inverted_dict
+
+
 def create_html():
     #init
     dict_df,wb=get_dict_df()
@@ -1110,10 +1118,28 @@ def create_html():
     #calculate progress tracking
     # by By department Who has finished how many
     """
+    Do two visualizations
+    
     1. loop over all process
-    2. filter out things that I created
-    3. group by Department
+    2. filter out things that I created:
+    3.1 group by [Capbility, L2 Department, L3 Department ]
+    3.2 group by [topic ,  capability]
+    
     """
+
+    dict_order={
+        "Capability":["Capability"]
+    }
+    df_process=dict_df["Employee_Process"]
+    global dict_link
+    for index,order in dict_order.items():
+        for tab in order:#merg with tag id
+            df_tab=dict_df[tab]
+            process_label=dict_link[tab]
+            #merge process and tab
+            df_merged=pd.merge(left=df_process, right=df_tab,  how='left', left_on=process_label, right_on=tab, left_index=False)
+            df_merged.to_excel(f"{tab} merged.xlsx")
+
 
 
     # classes
