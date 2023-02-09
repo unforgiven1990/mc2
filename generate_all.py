@@ -1269,6 +1269,7 @@ def craw_wiki():
 
 if __name__ == '__main__':
     #craw_wiki()
+    #明显错的
 
     if True:
         generate_linkabe_column()
