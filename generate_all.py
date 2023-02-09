@@ -181,14 +181,19 @@ def cleanup(dict_df, excel_data_raw):
             column_index = df_tab.columns.get_loc(column)
             for index, cell_data in df_tab[column].items():
                 if pd.notna(cell_data) and cell_data is not None:
-                    print(cell_data)
                     try:
                         hyperlink = ws.cell(row=index+2, column=column_index+1).hyperlink.target
                     except:
                         hyperlink=cell_data
-                    #value = ws.cell(row=index+2, column=column_index+1).value
-                    hyperlink_display=hyperlink.replace("https://","")
-                    df_tab.at[index,column]=f"<a href='{hyperlink}' target='_blank'>{hyperlink_display}</a>"
+
+                    print(cell_data, hyperlink)
+                    s_hyperlinks=''
+                    for link in hyperlink.split(" "):
+
+                        hyperlink_display=hyperlink.replace("https://","")
+                        s_hyperlinks+=f"<a href='{link}' target='_blank'>{hyperlink_display}</a>"
+
+                    df_tab.at[index,column]=s_hyperlinks
 
     return new_dict_df
 
@@ -487,15 +492,22 @@ def return_instance_img(instance, tab, imgclass):
     instance_with_space=instance.replace("_"," ")
     a_multiple=[]
     a_multiple+=[f"({x})" for x in range(10)]
+    a_pic=[".jpg",".png", ".webp",]
+    a_pdf=[".pdf"]
 
-    for ending in [".jpg",".png", ".webp"]:
+    for ending in a_pic+a_pdf:
         for file_path in glob.glob(f"attachments/Process Standardization Input-{tab}_Attachment/*{ending}"):
             for multiple in ["","(1)","(2)","(3)","(4)"]:
                 file_name=os.path.basename(file_path).replace(f"{ending}","").replace(f"_Process Flow{multiple}","")
                 #check this name for first image against this instance
                 if instance_with_space ==  file_name :
                     url= f'../../attachments/Process Standardization Input-{tab}_Attachment/{instance.replace("_"," ")}_Process Flow{multiple}{ending}'
-                    a_img+=[f'<img class="{imgclass} mb-3" src="{url}" >']
+                    if ending in a_pic:
+                        a_img+=[f'<img class="{imgclass} mb-3" src="{url}" >']
+                    elif ending in a_pdf:
+                        a_img += [f"<embed src='{url}'  style='height:90vh;  width:100%;' />"]
+                    else:
+                        a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
 
 
                 #check this name for other images (n) against this instance
@@ -1140,6 +1152,14 @@ def create_html():
                 #merge process and tab
                 df_merged=pd.merge(left=df_process, right=df_tab,  how='left', left_on=process_label, right_on=tab, left_index=False)
                 df_merged.to_excel(f"{tab} merged.xlsx")
+
+
+    #prevent duplicates of process names and duplicates of other tabs
+    for tab,df in dict_df.items():
+        xs=list(df[tab])
+        result=set([x for x in xs if xs.count(x) > 1])
+        if result:
+            print(f"DUPLICATES of {tab}: {result}")
 
 
 

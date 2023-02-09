@@ -112,9 +112,13 @@ function checkdata(value) {
         return false;
     } else if (value == null) {
         return false;
-    } else if (value === null) {
+    } else if (value === "null") {
         return false;
-    } else if (value.length == 0) {
+    } else if (value == null) {
+        return false;
+    } else if (value === "null") {
+        return false;}
+    else if (value.length == 0) {
         return false;
     } else if (value.length === 0) {
         return false;
@@ -472,7 +476,12 @@ function generate_department_hierarchy(page_instance, page_class){
             var label =  underscore2space(val)+ " =\n"+ underscore2space(current_instance)   ;
         } else {
            //label for cy, shorter, more compat
-            var label = underscore2space(val).replace(" ","\n");
+           if (checkdata(val)){
+                var label = underscore2space(val).replace(" ","\n");
+           }else{
+                var label = String(val);
+           }
+
         }
         var class_val='';
         if (val == page_instance){

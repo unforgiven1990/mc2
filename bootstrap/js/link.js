@@ -13,7 +13,7 @@ var link = {
     },
     "Employee_Process": {
         "Has Subprocess": "Employee_Process",
-        "For Capabilities": "Capability",
+        "Process Category": "Capability",
         "Operated by Role": "Role",
         "Uses System": "System"
     },
