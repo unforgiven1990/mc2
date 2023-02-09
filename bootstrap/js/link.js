@@ -33,7 +33,6 @@ var link = {
         "Implemented by Process": "Employee_Process",
         "Implements Strategy": "Strategy",
         "Defined by Department": "Department",
-        "SOP written by": "Employee",
         "Belongs to Topic": "Topic"
     },
     "Department": {

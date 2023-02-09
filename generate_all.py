@@ -94,8 +94,8 @@ def cleanup(dict_df, excel_data_raw):
                      '"':'',
                      "/":'',
                      ":":'',
-                     ")":'',
-                     "(":'',
+                     #")":'',
+                     #"(":'',
                      "  ": ' ',# replaced in this order, first remove double space, then replace to underscore
                      " ":'_', #still empty space in tab data not converted
                      }
@@ -1127,18 +1127,19 @@ def create_html():
     
     """
 
-    dict_order={
-        "Capability":["Capability"]
-    }
-    df_process=dict_df["Employee_Process"]
-    global dict_link
-    for index,order in dict_order.items():
-        for tab in order:#merg with tag id
-            df_tab=dict_df[tab]
-            process_label=dict_link[tab]
-            #merge process and tab
-            df_merged=pd.merge(left=df_process, right=df_tab,  how='left', left_on=process_label, right_on=tab, left_index=False)
-            df_merged.to_excel(f"{tab} merged.xlsx")
+    if False:
+        dict_order={
+            "Capability":["Capability"]
+        }
+        df_process=dict_df["Employee_Process"]
+        global dict_link
+        for index,order in dict_order.items():
+            for tab in order:#merg with tag id
+                df_tab=dict_df[tab]
+                process_label=dict_link[tab]
+                #merge process and tab
+                df_merged=pd.merge(left=df_process, right=df_tab,  how='left', left_on=process_label, right_on=tab, left_index=False)
+                df_merged.to_excel(f"{tab} merged.xlsx")
 
 
 
