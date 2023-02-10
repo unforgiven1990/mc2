@@ -1003,7 +1003,7 @@ $.each(a_classes, function(index, predef_class) {
     if ( a_result.length == 0) {
         //pass
     }else{
-        tds=tds+'<tr><td class="labeltd" >'+predef_class.replace("_", " ")+' <div class="text-muted">(calculated)</div></td>' +'<td>'+produce_lis(a_result)+'</td></tr>';
+        tds=tds+'<tr id="'+predef_class+'"><td class="labeltd" >'+predef_class.replace("_", " ")+' <div class="text-muted">(calculated)</div></td>' +'<td>'+produce_lis(a_result)+'</td></tr>';
         //console.log("predef_class "+predef_class);
     }
 
