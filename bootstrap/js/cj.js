@@ -949,7 +949,7 @@ function display_instance_attribute_aslist(instance,instance_class){
                 }else if (row_index == "MC2 Link" || row_index == "Process Flow" || row_index == instance_class){
                     //do nothing, dont show these labels and data
                 }else if(typeof(cell_data)=="string"){
-                    tds=tds+'<tr><td class="labeltd" >'+row_index.replace("_", " ")+'</td>' +'<td>'+produce_lis(cell_data.split(","))+'</td></tr>';
+                    tds=tds+'<tr id="'+row_index+'"><td class="labeltd" >'+row_index.replace("_", " ")+'</td>' +'<td>'+produce_lis(cell_data.split(","))+'</td></tr>';
                 }
             });
         }
