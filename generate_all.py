@@ -233,13 +233,13 @@ def return_string_indirect(word):
     """returns a fa icon"""
     dict_gallery = {
         "Departments": [],
-        "Department": ["Role", "City", "Capability", "Process_Category", "User_Process", "Employee_Process", "System"],
-        "Department_Category": ["Role", "Employee", "City", "Capability", "Process_Category", "User_Process",
+        "Department": ["Role", "City", "Capability", "Process_Category",  "Employee_Process", "System"],
+        "Department_Category": ["Role", "Employee", "City", "Capability", "Process_Category",
                                 "Employee_Process", "System"],
-        "Employee": ["User_Process", "Employee_Process", "Capability", "System"],
-        "Role": ["User_Process", "Department", "Capability", "System", "City"],
-        "User_Process": ["Process_Category", "Department", "Role", "Employee"],
-        "Employee_Process": ["Department", "Department_Category", "Employee", "User_Journey"],
+        "Employee": [ "Employee_Process", "Capability", "System"],
+        "Role": [ "Department", "Capability", "System", "City"],
+        "User_Process": ["Employee_Process", "Department", "Role", "Employee"],
+        "Employee_Process": ["Department", "Department_Category",  "Employee", "Topic"],
         "Capability": ["Department", "Department_Category", "Role", "Employee"],
         "System": ["Department", "Department_Category", "Role", "Employee"],
         "Strategy": ["Employee_Process", "System"],
@@ -482,8 +482,8 @@ def return_instance_img(instance, tab, imgclass):
     instance_with_space = instance.replace("_", " ")
     a_multiple = []
     a_multiple += [f"({x})" for x in range(10)]
-    a_pic = [".jpg", ".png", ".webp", ]
-    a_pdf = [".pdf"]
+    a_pic = [".jpg", ".png", ".webp",".svg",".jpeg",".JPG", ".PNG", ".WEBP",".SVG",".JPEG" ]
+    a_pdf = [".pdf",".PDF"]
 
     for ending in a_pic + a_pdf:
         for file_path in glob.glob(f"attachments/Process Standardization Input-{tab}_Attachment/*{ending}"):
@@ -626,20 +626,25 @@ def return_content_instance(instance, row, tab, dict_df):
                     # get picture
                     subprocess_image = return_instance_img(instance=subprocess, tab=tab, imgclass="instance_img")
                     a_subprocess_img += [
-                        f"<h4><a href='{return_word_instance_url(class_tab=tab, instance=subprocess)}'>{len(a_subprocess_img) + 1}. Sub Process: {underscore_replacer(subprocess)}</a></h4>{subprocess_image}"]
+                        f"<h4><a href='{return_word_instance_url(class_tab=tab, instance=subprocess)}'> {len(a_subprocess_img) + 1}. Sub Process: {underscore_replacer(subprocess)}</a></h4>{subprocess_image}"]
 
     # create grid
-    combined_img = process_image  # process has only one picture
+    cysubprocess = f"<div id='cysubprocess' class=' mb-3 width100 background2' ></div>"
+    cysubprocess =""
+    combined_img = process_image+cysubprocess  # process has only one picture
     if len(a_subprocess_img) > 0:  # process has at least 1 picture in subprocess
         helper = [f"<div class='col col-md-4'>{x}</div>" for x in a_subprocess_img]
         grid_subprocess = '<div class="row mt-5">{}</div>'.format("".join(helper))
         combined_img += grid_subprocess
+
 
     # create all image combination
     if combined_img:
         grid3 = grid3.format(grid3label, "".join(combined_img))
     else:
         grid3 = ""
+
+
 
     # process_image=f'<img id="instance_img" src="{instance_img_url}" alt="{instance} Attached Image from Bitable">'+spacer if instance_img_url else ""
     direct_part = grid1.format(label_direct_attribute, leftrightgrid.format(direct_part_left, direct_part_right))
@@ -648,6 +653,8 @@ def return_content_instance(instance, row, tab, dict_df):
 
     content = header + spacer + grid3 + direct_part + spacer + indirect_part + spacer
     return template.format(content=content, jsinclude=component_cy_js)
+
+
 
 
 def return_template_card():
@@ -686,7 +693,7 @@ def return_word_class_url(class_tab):
 
 
 def return_word_instance_url(class_tab, instance):
-    return fr"../../page/{class_tab}/{instance}.html"
+    return fr"../../page/{class_tab}/{space_replacer(instance)}.html"
 
 
 def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
@@ -1163,97 +1170,106 @@ def create_html():
         return df_department["Defined by Department"].unique()
 
 
+    def get_link_people(people):
+        urlt = "http://mc2.nioint.com/page/Employee/{}.html#Employee_Process"
+        return  f"<a target='_blank' href='{urlt.format(people.lower().replace(' ','_'))}'>@{people}</a>"
 
-    # generate communication email
-    """
-    1. join all tables together (add capability, Department)
-    2. Group by whatever you want
-    """
-    df_merged = pd.DataFrame()
-    for tab_left, tab_right in pairwise(["Employee_Process", "Capability", "Department"]):
-        if df_merged.empty:
-            df_left = dict_df[tab_left]
-        else:
-            df_left = df_merged
-        df_right = dict_df[tab_right]
-        tab_name_left = get_column_name(tab_left, tab_right)
 
-        # rename column to add tab in advance
-        df_merged = pd.merge(left=df_left, right=df_right, how='left', left_on=f"{tab_name_left}",                            right_on=f"{tab_right}",                             left_index=False, suffixes=(f'_{tab_left}', f'_{tab_right}'))
 
-    #replace underscore
-    for col in df_merged:
-        try:
-            df_merged[col] = df_merged[col].str.replace("_", " ")
-        except:
-            pass
-    df_merged.to_excel(f"z merged.xlsx") #df_merged finished
+    if False:
+        # generate communication email
+        """
+        1. join all tables together (add capability, Department)
+        2. Group by whatever you want
+        """
+        df_merged = pd.DataFrame()
+        for tab_left, tab_right in pairwise(["Employee_Process", "Capability", "Department"]):
+            if df_merged.empty:
+                df_left = dict_df[tab_left]
+            else:
+                df_left = df_merged
+            df_right = dict_df[tab_right]
+            tab_name_left = get_column_name(tab_left, tab_right)
 
-    # generate report
-    a_g = ['Belongs to Topic', 'Defined by Department', "Has Leader"]
-    email = ""
-    template_topic = get("template/topic.html")
-    template_dpt = get("template/dpt.html")
+            # rename column to add tab in advance
+            df_merged = pd.merge(left=df_left, right=df_right, how='left', left_on=f"{tab_name_left}",                            right_on=f"{tab_right}",                             left_index=False, suffixes=(f'_{tab_left}', f'_{tab_right}'))
 
-    # groupby topic with  3
-    for counter in [1,2,3]:
+        #replace underscore
+        for col in df_merged:
+            try:
+                df_merged[col] = df_merged[col].str.replace("_", " ")
+            except:
+                pass
+        df_merged.to_excel(f"z merged.xlsx") #df_merged finished
+
+        # generate report
         a_g = ['Belongs to Topic', 'Defined by Department', "Has Leader"]
-        a_g=a_g[0:counter]
-        df_grouped_topic = df_merged.groupby(a_g).count()
-        df_grouped_topic = df_grouped_topic.reset_index()
-        df_grouped_topic=df_grouped_topic.sort_values(a_g[0],ascending=False)
-        df_grouped_topic.to_excel(f"z topic{counter}.xlsx")
+        email = ""
+        template_topic = get("template/topic.html")
+        template_dpt = get("template/dpt.html")
 
-    a_g = ['Belongs to Topic', 'Defined by Department', "Has Leader"]
+
+        # groupby topic with  3
+        for counter in [1,2,3]:
+            a_g = ['Belongs to Topic', 'Defined by Department', "Has Leader"]
+            a_g=a_g[0:counter]
+            df_grouped_topic = df_merged.groupby(a_g).count()
+            df_grouped_topic = df_grouped_topic.reset_index()
+            df_grouped_topic=df_grouped_topic.sort_values(a_g[0],ascending=False)
+            df_grouped_topic.to_excel(f"z topic{counter}.xlsx")
+
+        a_g = ['Belongs to Topic', 'Defined by Department', "Has Leader"]
 
 
 
     # looping over all topics
-    for counter, atopic in enumerate(df_grouped_topic[a_g[0]].unique()):
-        print(f"Department {atopic}")
-        # for each unique group1element find all
-        df_group1_f=df_grouped_topic[df_grouped_topic[a_g[0]]==atopic]
+    if False:
+        for counter, atopic in enumerate(df_grouped_topic[a_g[0]].unique()):
+            print(f"Department {atopic}")
+            # for each unique group1element find all
+            df_group1_f=df_grouped_topic[df_grouped_topic[a_g[0]]==atopic]
 
-        # looping over topic
-        a_dpt_result=[]
-        for index, topic,dpt,leader in zip(df_group1_f.index, df_group1_f[a_g[0]], df_group1_f[a_g[1]], df_group1_f["Has Leader"]):
-            leader=leader.title()
+            # looping over topic
+            a_dpt_result=[]
+            for index, topic,dpt,leader in zip(df_group1_f.index, df_group1_f[a_g[0]], df_group1_f[a_g[1]], df_group1_f["Has Leader"]):
+                leader=leader.title()
 
-            de_l=df_merged.loc[df_merged[a_g[1]]==dpt,"DE Counterpart"].iat[0]
-            dk_l=df_merged.loc[df_merged[a_g[1]]==dpt,"DK Counterpart"].iat[0]
-            nl_l=df_merged.loc[df_merged[a_g[1]]==dpt,"NL Counterpart"].iat[0]
-            se_l=df_merged.loc[df_merged[a_g[1]]==dpt,"SE Counterpart"].iat[0]
-            no_l=df_merged.loc[df_merged[a_g[1]]==dpt,"NO Counterpart"].iat[0]
+                de_l=df_merged.loc[df_merged[a_g[1]]==dpt,"DE Counterpart"].iat[0]
+                dk_l=df_merged.loc[df_merged[a_g[1]]==dpt,"DK Counterpart"].iat[0]
+                nl_l=df_merged.loc[df_merged[a_g[1]]==dpt,"NL Counterpart"].iat[0]
+                se_l=df_merged.loc[df_merged[a_g[1]]==dpt,"SE Counterpart"].iat[0]
+                no_l=df_merged.loc[df_merged[a_g[1]]==dpt,"NO Counterpart"].iat[0]
 
-            de_c=0
-            dk_c=0
-            nl_c=0
-            se_c=0
-            no_c=0
+                de_c=0
+                dk_c=0
+                nl_c=0
+                se_c=0
+                no_c=0
 
-            de=f"<strong>{de_c}</strong> @{de_l}"
-            dk=f"<strong>{dk_c}</strong> @{dk_l}"
-            nl=f"<strong>{nl_c}</strong> @{nl_l}"
-            se=f"<strong>{se_c}</strong> @{se_l}"
-            no=f"<strong>{no_c}</strong> @{no_l}"
+                de_h,dk_h,nl_h,se_h,no_h =[get_link_people(x) for x in [de_l,dk_l,nl_l,se_l,no_l]]
 
-            listed = len(df_merged[(df_merged[a_g[0]] == topic) & (df_merged[a_g[1]] == dpt)])
-            listed = f"<strong>{listed}</strong> @{leader}"
-            leadersigned=0
-            leadersigned = f"<strong>{leadersigned}</strong> @{leader}"
+                de=f"<strong>{de_c}</strong> {de_h}"
+                dk=f"<strong>{dk_c}</strong> {dk_h}"
+                nl=f"<strong>{nl_c}</strong> {nl_h}"
+                se=f"<strong>{se_c}</strong> {se_h}"
+                no=f"<strong>{no_c}</strong> {no_h}"
 
-            #put everything together
-            href = f"http://mc2.nioint.com/page/Department/{dpt.replace(' ','_')}.html"
-            dpt_info = template_dpt.format(dpt=dpt,  listed=listed, signed1=leadersigned, href=href, de=de,no=no,nl=nl,dk=dk,se=se)
-            a_dpt_result += [dpt_info]
+                listed = len(df_merged[(df_merged[a_g[0]] == topic) & (df_merged[a_g[1]] == dpt)])
+                listed = f"<strong>{listed}</strong> {get_link_people(leader)}"
+                leadersigned=0
+                leadersigned = f"<strong>{leadersigned}</strong> {get_link_people(leader)}"
+
+                #put everything together
+                href = f"http://mc2.nioint.com/page/Department/{dpt.replace(' ','_')}.html#Employee_Process"
+                dpt_info = template_dpt.format(dpt=dpt,  listed=listed, signed1=leadersigned, href=href, de=de,no=no,nl=nl,dk=dk,se=se)
+                a_dpt_result += [dpt_info]
 
 
-        content = f"<ul>{''.join(a_dpt_result)}</ul>"
+            content = f"<ul>{''.join(a_dpt_result)}</ul>"
 
-        email += template_topic.format(topic=f"{counter+1}. {atopic}", content=content)
+            email += template_topic.format(topic=f"{counter+1}. {atopic}", content=content)
+        output_file(email, "email.html")
 
-    output_file(email, "email.html")
-    return
 
     # prevent duplicates of process names and duplicates of other tabs
     for tab, df in dict_df.items():

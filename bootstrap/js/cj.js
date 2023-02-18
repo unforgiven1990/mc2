@@ -212,7 +212,7 @@ var df=data[class_tab];
     $.each(df, function(key, row) {
         result.push(row[class_tab]);
     });
-    console.log(class_tab,result);
+    //console.log(class_tab,result);
     return result;
 }
 
@@ -264,11 +264,14 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
     var animate=true;
     if(id=="cy"){
         var layout_style="cise";
+    }if(id=="cysubprocess"){
+        var layout_style="dagre";
+        fit=true;
+        animate=false;
     }else if (id=="cy4"){
         var layout_style="dagre";
         fit=true;
         animate=false;
-
     }else{
         var selected_layout= $("#layoutselect").val();
         if (checkdata(selected_layout)){
@@ -461,10 +464,201 @@ var bugged_departments={"Europe_UserOperation_Department":'Europe_User_Operation
 var bugged_departments={};
 
 
+function rekursive_parent_children(page_instance, page_class,subclasscol){
+
+//first find all non none cols
+var all_instances=get_all_instance(class_tab=page_class);
+var notnone_instances=[]
+$.each(all_instances, function(key, mainprocess) {
+    var has_subprocess=get_cell(df=data[page_class], index=mainprocess, col=subclasscol, tab=page_class);
+    has_subprocess=space2underscore(has_subprocess);
+
+    if(!checkdata(has_subprocess)){
+        return;
+    }
+
+    $.each(has_subprocess.split(","), function(key, subprocess) {
+        notnone_instances.push(subprocess);
+    });
+
+});
+
+
+//find all subprocess to see if this subprocess is linked somewhere
+//go from current instance to see if he has parents
+current_node=page_instance
+parent_node=""
+    while(true){
+        if(notnone_instances.includes(current_node)){
+
+
+        }
+    }
+
+
+//find all children first
+
+}
+
+
 //generate department hierarchy
-function generate_department_hierarchy(page_instance, page_class){
+function generate_hierarchy(page_instance, page_class, subclasscol, topdown=true){
     // add all departments to nodes
     // link all departments together
+    var elements = []
+    var all_instances=get_all_instance(class_tab=page_class);
+
+    //maybe filter out class that are standalone to reduce calcualtion time
+    //Find all elements that has  subclasscol !=none
+    //Find
+    var helper_array=[];
+
+
+
+    if (!topdown){
+        var all_instances_pure=[]
+        $.each(all_instances, function(key, mainprocess) {
+            var has_subprocess=get_cell(df=data[page_class], index=mainprocess, col=subclasscol, tab=page_class);
+            has_subprocess=space2underscore(has_subprocess);
+
+            if (checkdata(has_subprocess)){
+                //console.log(mainprocess+' has subprocess '+has_subprocess);
+                //current element has sub element
+                if (checkdata(mainprocess)){
+                    all_instances_pure.push(mainprocess);
+                }
+
+
+                $.each(has_subprocess.split(","), function(key, subprocess) {
+
+                    all_instances_pure.push(subprocess);
+
+                });
+            }else{
+                console.log(mainprocess+' has NO subprocess '+has_subprocess);
+            }
+
+        });
+
+        all_instances=all_instances_pure;
+        //console.log("this is filtered sub instance");
+        //console.log(all_instances);
+    }
+
+
+
+
+    //calculate nodes
+    $.each(all_instances, function(key, val) {
+        if (current_class == val && checkdata(current_instance)) {
+            var label =  underscore2space(val)+ " =\n"+ underscore2space(current_instance)   ;
+        } else {
+           //label for cy, shorter, more compat
+           if (checkdata(val)){
+                var label = underscore2space(val).replace(" ","\n");
+           }else{
+                var label = String(val);
+           }
+
+        }
+        var class_val='';
+        if (val == page_instance){
+            class_val="red"
+        }
+
+        elements.push({
+            data: {
+                'id': val,
+                'label': label,
+                'href': "../../page/" + page_class + "/" + val + ".html",
+                'class':class_val
+            }
+        });
+        helper_array.push(val);
+        //elements.push({data: {'id':val , 'label': label, 'href':"../../page/"+val+"/"+val+".html"} });
+    });
+    elements=elements.reverse()
+
+
+
+
+    //calculate edges way 1: sub class has class
+    if (topdown){
+
+        //topdown is one process has many sub processes
+        $.each(all_instances, function(key, val) {
+            var belongs_to=get_cell(df=data[page_class], index=val, col=subclasscol, tab=page_class);
+            belongs_to=space2underscore(belongs_to);
+
+            if (helper_array.includes(belongs_to) ){
+                // found the column without bug
+            }else if ( belongs_to in  bugged_departments){
+                // found the column with bug
+                belongs_to=bugged_departments[belongs_to];
+            }else{
+                //did not found the column
+                //console.log(val," not here ",belongs_to);
+                return;
+            }
+
+            //console.log(val," here ",belongs_to);
+                elements.push({
+                    data: {
+                        'id': belongs_to+'_'+val, // changing display name to display id removes double edges
+                        'source': belongs_to,
+                        'target': val,
+                    }
+                });
+        });
+
+
+    }else{
+
+
+        //bottom up is each subprocess need to check his mother process
+        $.each(all_instances, function(key, val) {
+            var belongs_to=get_cell(df=data[page_class], index=val, col=subclasscol, tab=page_class);
+            belongs_to=space2underscore(belongs_to);
+
+            //if belongs_to is empty, then continue
+            if (!checkdata(belongs_to)){
+                return;
+            }
+
+            $.each(belongs_to.split(","), function(key, val2) {
+                elements.push({
+                    data: {
+                        'id': val+'_'+val2, // changing display name to display id removes double edges
+                        'source': val,
+                        'target': val2,
+                    }
+                });
+            });
+
+
+
+        });
+
+    }
+
+
+
+
+    //console.log("here", elements);
+    return elements;
+
+}
+
+
+
+
+
+
+
+//generate hierarchy by find all parents, then find all sub relations
+function generate_hierarchy2(page_instance, page_class, subclasscol){
+    // first find all parents that has this element has sub class
+    // then find all children that has
     var elements = []
     var all_instances=get_all_instance(class_tab=page_class);
     var helper_array=[];
@@ -488,7 +682,7 @@ function generate_department_hierarchy(page_instance, page_class){
             class_val="red"
         }
 
-
+        //console.log("added node "+val)
         elements.push({
             data: {
                 'id': val,
@@ -506,9 +700,8 @@ function generate_department_hierarchy(page_instance, page_class){
     //calculate edges
 
     $.each(all_instances, function(key, val) {
-        var belongs_to=get_cell(df=data[page_class], index=val, col="Belongs to Department", tab=page_class);
+        var belongs_to=get_cell(df=data[page_class], index=val, col=subclasscol, tab=page_class);
         belongs_to=space2underscore(belongs_to);
-
 
         if (helper_array.includes(belongs_to) ){
             // found the column without bug
@@ -537,6 +730,11 @@ function generate_department_hierarchy(page_instance, page_class){
     return elements;
 
 }
+
+
+
+
+
 
 
 
@@ -1153,6 +1351,7 @@ $(document).ready(function() {
         cy.$('node').addClass('blue'); //highlight and make all nodes blue
     } else if (checkdata(page_class) && checkdata(page_instance)) { //instance page
         cy = create_cy(id = "cy", current_class = page_class, current_instance = page_instance, elements = generate_class_elements(page_class, page_instance));
+
     } else if (page_class != "" && page_instance == "") { // class page
         if ($("#cy").length > 0){//if this chart exists
             cy = create_cy(id = "cy", current_class = page_class, current_instance = '', elements = generate_class_elements(page_class, page_instance));
@@ -1161,11 +1360,11 @@ $(document).ready(function() {
 
 
     //add department hierarchy for people section
-    /** **/
     if (page_class =="Department" && checkdata(page_instance)){
-        var instance_elements=generate_department_hierarchy(page_instance, page_class);
+        var instance_elements=generate_hierarchy(page_instance, page_class, subclasscol="Belongs to Department",topdown=true);
         var cy4 = create_cy(id = "cy4", current_class = page_class, current_instance = page_instance, elements = instance_elements);
 
+        //focus on the position
         cy.ready(function() {
             var parent_dept=get_cell(df=data["Department"], index=page_instance, col="Belongs to Department", tab=page_class);
             if(parent_dept in bugged_departments){
@@ -1178,6 +1377,31 @@ $(document).ready(function() {
             cy4.fit(focus, 50);
         });
     }
+
+
+
+    //add sub process hierarchy
+    /*
+    if(page_class=="Employee_Process" && checkdata(page_instance)){
+        // create subprocess chart
+        var a_subprocess=generate_hierarchy(page_instance, page_class, subclasscol="Has Subprocess",topdown=false);
+
+        //create CY is too slow, drawing too many nodes
+        cysubprocess = create_cy(id = "cysubprocess", current_class = page_class, current_instance = page_instance, elements = a_subprocess);
+
+        var pagenode=cysubprocess.$('#'+page_instance );
+        var relatednodes=pagenode.connectedNodes();
+        console.log("related pagenode are  ");
+        console.log(pagenode.id());
+        console.log("related relatednodes are  ");
+        console.log(relatednodes.id());
+        // .not() filters out whatever is not specified in connected, e.g. every other node/edge not present in connected
+        //var notConnected = cysubprocess.elements().not(relatednodes);
+
+        // if you want, you can later add the saved elements again
+        //var saved = cysubprocess.remove(notConnected);
+    }
+*/
 
 
 
@@ -1197,10 +1421,17 @@ $(document).ready(function() {
     }).remove();
     //console.log("2 cy",dict_cy["cy"].elements());
 
+
+
     //only for user journey
-    $(window).on('scroll', () => {
+    /**
+     *
+     * $(window).on('scroll', () => {
       update_nav();
     })
+     *
+     */
+
 
 
 });

@@ -12,7 +12,6 @@ var link = {
         "For Business Model": "Business_Model"
     },
     "Employee_Process": {
-        "Has Subprocess": "Employee_Process",
         "Process Category": "Capability",
         "Operated by Role": "Role",
         "Uses System": "System"
@@ -56,9 +55,6 @@ var link = {
         "Is Part of": "Country",
         "Has Employees": "Employee",
         "Has Facility": "Facility"
-    },
-    "System": {
-        "Used By Process": "Employee_Process"
     },
     "Car": {
         "Available in Country": "Country"
