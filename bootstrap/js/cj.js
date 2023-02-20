@@ -258,21 +258,56 @@ function update_chart2_butnotdraw(target_class){
 }
 
 
-//draw chart in general
-function create_cy(id, current_class = '', current_instance = '', elements = []) {
+
+function mycise(){
     var fit= true;
     var animate=true;
+return {
+            name: "cise",
+            spacingFactor: 1,
+            avoidOverlap: true,
+            //rankDir: 'TB',
+            //ranker: 'network-simplex',
+            fit:fit,
+            padding: 20,
+            refresh:20000,
+            animate: animate,
+            nodeDimensionsIncludeLabels: true,
+            idealInterClusterEdgeLengthCoefficient: 1.00, //also the bigger the more far away
+            nodeRepulsion: 6000, //the bigger the more far away
+        }
+}
+
+
+
+function mydagre(layout="dagre"){
+fit=true;
+        animate=false;
+return {
+            name: layout,
+            spacingFactor: 1,
+            avoidOverlap: true,
+            rankDir: 'TB',
+            ranker: 'network-simplex',
+            fit:fit,
+            padding: 20,
+            refresh:200,
+            animate: animate,
+            nodeDimensionsIncludeLabels: true,
+            idealInterClusterEdgeLengthCoefficient: 1.00, //also the bigger the more far away
+            nodeRepulsion: 6000, //the bigger the more far away
+        }
+}
+
+
+
+
+//draw chart in general
+function create_cy(id, current_class = '', current_instance = '', elements = []) {
+
     if(id=="cy"){
-        var layout_style="cise";
-    }if(id=="cysubprocess"){
-        var layout_style="dagre";
-        fit=true;
-        animate=false;
-    }else if (id=="cy4"){
-        var layout_style="dagre";
-        fit=true;
-        animate=false;
-    }else{
+        var layout_style=mycise(); //bottom left
+    }else if(id=="cy2"){
         var selected_layout= $("#layoutselect").val();
         if (checkdata(selected_layout)){
             var layout_style=selected_layout.replace(" layout", "");
@@ -280,6 +315,18 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             //console.log("selected layout is ",selected_layout);
             var layout_style="concentric";
         }
+
+        var layout_style=mydagre(layout_style); //bottom right instance
+    }else if(id=="cy3"){
+        var layout_style=mydagre(); // fullscreen modal
+    }else if (id=="cy4"){
+        var layout_style=mydagre(); //department chart
+    }else if(id=="cysubprocess"){
+        var layout_style=mydagre(); //subprocess chart
+    }else{
+    /**/
+        var layout_style=mycise();
+
     }
 
 
@@ -359,20 +406,7 @@ function create_cy(id, current_class = '', current_instance = '', elements = [])
             }
         ],
 
-        layout: {
-            name: layout_style,
-            spacingFactor: 1,
-            avoidOverlap: true,
-            rankDir: 'TB',
-            ranker: 'network-simplex',
-            fit:fit,
-            padding: 20,
-            refresh:20000,
-            animate: animate,
-            nodeDimensionsIncludeLabels: true,
-            idealInterClusterEdgeLengthCoefficient: 1.00, //also the bigger the more far away
-            nodeRepulsion: 6000, //the bigger the more far away
-        },
+        layout: layout_style,
         ready: function() {
 
         }
