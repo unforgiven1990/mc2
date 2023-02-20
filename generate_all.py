@@ -495,7 +495,7 @@ def return_instance_img(instance, tab, imgclass):
                     if ending in a_pic:
                         a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
                     elif ending in a_pdf:
-                        a_img += [f"<embed src='{url}'  style='height:90vh;  width:100%;' />"]
+                        a_img += [f"<embed src='{url}#toolbar=0'  style='height:90vh;  width:100%;' />"]
                     else:
                         a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
 

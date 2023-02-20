@@ -13,7 +13,7 @@ var link = {
     },
     "Employee_Process": {
         "Process Category": "Capability",
-        "Operated by Role": "Role",
+        "Involved Stakeholders": "Role",
         "Uses System": "System"
     },
     "Country": {
