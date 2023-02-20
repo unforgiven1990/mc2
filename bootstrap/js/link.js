@@ -12,6 +12,7 @@ var link = {
         "For Business Model": "Business_Model"
     },
     "Employee_Process": {
+        "Has Subprocess": "Employee_Process",
         "Process Category": "Capability",
         "Involved Stakeholders": "Role",
         "Uses System": "System"
@@ -37,7 +38,8 @@ var link = {
     "Department": {
         "Belongs to Department": "Department",
         "Belongs to Department_Class": "Department_Category",
-        "Has Employee": "Employee"
+        "Has Employee": "Employee",
+        "Belongs to Topic": "Topic"
     },
     "Department_Category": {
         "Has Departments": "Department"
@@ -55,6 +57,9 @@ var link = {
         "Is Part of": "Country",
         "Has Employees": "Employee",
         "Has Facility": "Facility"
+    },
+    "System": {
+        "Used By Process": "Employee_Process"
     },
     "Car": {
         "Available in Country": "Country"

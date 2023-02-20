@@ -86,6 +86,13 @@ def generate_lark_to_mc2_link():
             f'HYPERLINK(CONCATENATE("https://unforgiven1990.github.io/mc2/page/","{tab}","/",SUBSTITUTE([{tab}]," ","_"),".html"), "LINK")')
 
 
+def sort_dict_by_key_length(d):
+    new_d = {}
+    for k in sorted(d, key=len, reverse=True):
+        new_d[k] = d[k]
+
+    return new_d
+
 def cleanup(dict_df, excel_data_raw):
     """
     iterate through all tabs, changes key items with comma to other sign
@@ -95,13 +102,14 @@ def cleanup(dict_df, excel_data_raw):
     dict_to_replace = {}
     forbidden_chars = {"@nio.com": '',
                        "@nio.io": '',
+                       "    ": '',
                        ",": '',
                        ".": '_',
                        '"': '',
                        "/": '',
                        ":": '',
-                       # ")":'',
-                       # "(":'',
+                       ")":'',
+                       "(":'',
                        "  ": ' ',  # replaced in this order, first remove double space, then replace to underscore
                        " ": '_',  # still empty space in tab data not converted
                        }
@@ -115,8 +123,18 @@ def cleanup(dict_df, excel_data_raw):
     }
     forbidden_chars = {**forbidden_chars}
 
+    #Remove before proceed: remove leading and ending space for each index
+    d_helper={}
+    for tab, df in dict_df.items():
+        df = df.replace(r"^ +| +$", r"", regex=True)
+        d_helper[tab] = df.replace('\xa0', '', regex=True)
+    dict_df=d_helper
+
+
     # for each tab in df- replace index
     for tab, df in dict_df.items():
+
+
         # create a new helper column to replace index
         df["RemoveMe"] = df[tab].copy()
 
@@ -141,15 +159,20 @@ def cleanup(dict_df, excel_data_raw):
         df[tab] = df["RemoveMe"]
         df.drop('RemoveMe', axis=1, inplace=True)
 
+
     # complete df replace why do you even need it?
+    dict_to_replace=sort_dict_by_key_length(dict_to_replace)
+    print(dict_to_replace)
     for tab, df in dict_df.items():
-        if tab == "Employee":
-            # df.to_excel("rasmus before.xlsx")
-            print(dict_to_replace)
+        if tab in ["Employee_Process","Capability"]:
+            df.to_excel(f"w_before replace  {tab}.xlsx")
 
         # replace all in one
         if True:
-            df.replace(dict_to_replace, inplace=True, regex=True)
+            df=df.replace(dict_to_replace, regex=True)
+
+            if tab in ["Employee_Process","Capability"]:
+                df.to_excel(f"w_after replace  {tab}.xlsx")
         else:
             # replace row by row
             for col in df.columns:  # for each column
@@ -169,9 +192,6 @@ def cleanup(dict_df, excel_data_raw):
                         df.at[key, entirecell] = ",".join(a_val_replaced)
 
         new_dict_df[tab] = df
-        if tab == "Employee":
-            pass
-            # df.to_excel("rasmus after.xlsx")
 
     # replace related document link hyperlink with real title
     for tab in ["Employee_Process", "User_Process", ]:
@@ -197,6 +217,7 @@ def cleanup(dict_df, excel_data_raw):
                         s_hyperlinks += f"<a href='{link}' target='_blank'>{hyperlink_display}</a>"
 
                     df_tab.at[index, column] = s_hyperlinks
+
 
     return new_dict_df
 
@@ -856,7 +877,7 @@ def generate_linkabe_column():
                             last_dict = dict_result[tab]
                             last_dict[col] = tab_compare
                             dict_result[tab] = last_dict  # store it somewhere
-    # df_result.to_excel("link.xlsx")#store as excel
+    df_result.to_excel("wlink.xlsx")#store as excel
 
     # save as global variable
     global dict_link
@@ -1307,8 +1328,11 @@ def create_html():
                 result = return_content_instance(instance=instance, row=row, tab=tab, dict_df=dict_df)
                 # change the word primary to success
                 result = result.replace("primary", 'primary')
-                with open(fr"page/{tab}/{instance}.html", "w", encoding="utf-8") as file:
-                    file.write(str(result))
+                try:
+                    with open(fr"page/{tab}/{instance}.html", "w", encoding="utf-8") as file:
+                        file.write(str(result))
+                except:
+                    print(f"ERROR saving instance page {tab}: {instance}")
 
     # index html
     Path(f"page/index").mkdir(parents=True, exist_ok=True)
