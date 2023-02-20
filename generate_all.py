@@ -318,8 +318,10 @@ def return_string_component(word):
         "KnowHow": "What Other Companies are doing, how NIO china is doing, what experiences we have learned",
         "Car": "What model exists for different country and business model",
         "Business_Model": "The location view shows what form of ownership user can have.",
-        "User_Journey": f"<select id='select_business'></select><select id='select_perspective'></select>",
-        "Process_Category": "<select id='select_business'></select><select id='select_perspective'></select>",
+        #"User_Journey": f"<select id='select_business'></select><select id='select_perspective'></select>",
+        "User_Journey": f"",
+        #"Process_Category": "<select id='select_business'></select><select id='select_perspective'></select>",
+        "Process_Category": "",
         "Country": "Markets where NIO sells car",
         "Things": "sad",
         "Approval": "sad",
@@ -368,7 +370,7 @@ def return_global_navbar():
         "Things": ["Country", "City", "Car", "Facility", "System"],
     }
 
-    navbar_template = '<nav class="navbar navbar-expand-lg navbar-dark bg-primary" aria-label="Eighth navbar example"> <div class="container">  <a href="../../page/index/index.html" class="navbar-brand"> <img src="../../img/nio light.png" height="28" alt="CoolBrand"> </a>  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarinstance" aria-controls="navbarinstance" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarinstance"> <ul class="navbar-nav me-auto mb-2 mb-lg-0"> {} </ul> </div> </div> </nav>'
+    navbar_template = '<nav class="navbar navbar-expand-lg navbar-light bg-light" aria-label="Eighth navbar example"> <div class="container">  <a href="../../page/index/index.html" class="navbar-brand"> <img src="../../img/nio light.png" height="28" alt="CoolBrand"> </a>  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarinstance" aria-controls="navbarinstance" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarinstance"> <ul class="navbar-nav me-auto mb-2 mb-lg-0"> {} </ul> </div> </div> </nav>'
     navbar_content = ""  # for li in url template
     for key, array in dict_nav.items():
         navbar_content_li_template = f'<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="fa-solid {return_string_icon(key)}"></i> {key} </a> <div class="dropdown-menu" aria-labelledby="navbarDropdown">' + '{}</div></li>'
@@ -705,7 +707,7 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
 
     if instance:
         h1_icon = f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} "></i></a>'
-        h1_icon = f'<a class="text-secondary" href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} text-secondary "></i><span class="underline"> {tab.replace("_", " ")}:</span></a>'
+        h1_icon = f'<a class="text-secondary" href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} text-secondary "></i><span class="underline"> {tab.replace("_", " ")}</span></a>'
     else:
         h1_icon = f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
     edit = f'<a href="{return_string_editurl(tab)}" style="font-size:1rem;" target="_blank" type="button" class="btn btn-primary btn-sm" ><i class="fa-solid fa-edit"></i></a>'
@@ -721,7 +723,11 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
         header_text = f'{instance.replace("_", " ")}' if instance else "All " + tab.replace("_", " ")
     else:
         header_text = custom_header_text
-    h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" ><b>{h1_icon} {header_text} {classcount}</b> {edit} </h1>' + explainer
+
+    if instance:
+        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{header_text.title()}  {edit} </h1> <b>{h1_icon} {classcount}</b>' + explainer
+    else:
+        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text.title()}  {edit} </h1> <b> {classcount}</b>' + explainer
 
     grid3 = return_grid3()
     h1 = grid3.format(h1)
