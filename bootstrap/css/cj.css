@@ -186,7 +186,11 @@ position: relative;
 }
 
 h1{
-font-size:2.2rem;
+font-size:2.4rem;
+}
+
+nav.navbar.navbar-expand-lg{
+background-color:#ededed !important;
 }
 
 h2, h2 > a, h2 > p{
@@ -209,7 +213,7 @@ font-size:0.9rem;
 h1,h2,h3,h4{
 margin-bottom: 0rem;
 font-weight:700;
-line-height:2;
+line-height:1.2;
 }
 
 

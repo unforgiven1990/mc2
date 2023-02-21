@@ -578,7 +578,7 @@ def return_grid2(other_class="mb-5", card_class=''):
 
 def return_grid3():
     return """
-                <div class="card" style="position: sticky; top: 0;">
+                <div class="card" style="position: sticky; top: 0; z-index:99;">
                   <div class="card-header">
                     {}
                   </div>
@@ -881,6 +881,14 @@ def generate_linkabe_column():
                             last_dict = dict_result[tab]
                             last_dict[col] = tab_compare
                             dict_result[tab] = last_dict  # store it somewhere
+
+
+    #hardcoded to remove links
+    df_result.at["Department_Capability","Capability"]=0
+    df_result.at["Department_Belongs_to_Topic","Topic"]=0
+    df_result.at["Capability_Defined_by_Department","Department"]=0
+    df_result.at["Capability_Belongs_to_Topic","Topic"]=0
+
     df_result.to_excel("wlink.xlsx")#store as excel
 
     # save as global variable

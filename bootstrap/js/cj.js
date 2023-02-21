@@ -811,6 +811,22 @@ function generate_class_elements(current_class, current_instance) {
 
         //first time
         $.each(all_links, function(linkkey, linkval) {
+
+            //manual hardcoded remove
+            if (val=="Department"&&linkval=="Capability"){
+                return
+            }else if (val=="Department"&&linkval=="Topic"){
+                return
+            }else if (val=="Capability"&&linkval=="Department"){
+                return
+            }else if (val=="Topic"&&linkval=="Department"){
+                return
+            }
+
+
+
+
+
             //console.log("link val ",val ,linkkey,linkval);
             var destination_label=linkkey; // is display name of column
             var destination_id=linkval;// is real edge column name
