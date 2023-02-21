@@ -602,7 +602,7 @@ def return_content_instance(instance, row, tab, dict_df):
     label_indirect_attribute = return_component_small_header("Graph View", id="predefined_relations",
                                                              h3_tag=f'data-predefined_relations="{predefined_class}"')
     label_indirect_attribute2 = return_component_small_header("Result")
-    header = return_component_header(df=pd.DataFrame(), tab=tab, dict_df=dict_df, instance=real_instance)
+    header = return_component_header(df=dict_df[tab], tab=tab, dict_df=dict_df, instance=real_instance)
     cy4 = return_cy4()
     if tab in ["Department"]:
         header = header + cy4
@@ -733,6 +733,15 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
     if instance:
         h1_icon = f'<a href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} "></i></a>'
         h1_icon = f'<a class="text-secondary" href="{return_word_class_url(class_tab=tab)}"><i class="fa-solid {return_string_icon(tab)} text-secondary "></i><span class="underline"> {tab.replace("_", " ")}</span></a>'
+        if tab=="Employee_Process":
+            category=df.at[instance,'Process Category']
+            if isinstance(category,str):
+                categorylabel=category.replace('_', " ")
+                category=f"<a class='text-secondary underline' href='{return_word_instance_url(class_tab='Capability',instance=category)}'>{categorylabel}</a>"
+                category=f" • {category}"
+            else:
+                category=""
+            h1_icon=f"{h1_icon}<span class='text-secondary'>{category} • last modified by {df.at[instance,'Modified By']} on {df.at[instance,'Last Modified']}</span>"
     else:
         h1_icon = f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
     edit = f'<a href="{return_string_editurl(tab)}" style="font-size:1rem;" target="_blank" type="button" class="btn btn-primary btn-sm" ><i class="fa-solid fa-edit"></i></a>'
@@ -750,9 +759,9 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
         header_text = custom_header_text
 
     if instance:
-        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{maketitle(header_text)}  {edit} </h1> <b>{h1_icon} {classcount}</b>' + explainer
+        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{maketitle(header_text)}  {edit} </h1> {h1_icon}' + explainer
     else:
-        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {maketitle(header_text)}  {edit} </h1> <b> {classcount}</b>' + explainer
+        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {maketitle(header_text)} {edit} </h1>' + explainer
 
     grid3 = return_grid3()
     h1 = grid3.format(h1)
