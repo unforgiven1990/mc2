@@ -93,6 +93,10 @@ def sort_dict_by_key_length(d):
 
     return new_d
 
+def maketitle(string):
+    return ' '.join([w.title() if w.islower() else w for w in string.split()])
+
+
 def cleanup(dict_df, excel_data_raw):
     """
     iterate through all tabs, changes key items with comma to other sign
@@ -746,9 +750,9 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
         header_text = custom_header_text
 
     if instance:
-        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{header_text.title()}  {edit} </h1> <b>{h1_icon} {classcount}</b>' + explainer
+        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{maketitle(header_text)}  {edit} </h1> <b>{h1_icon} {classcount}</b>' + explainer
     else:
-        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {header_text.title()}  {edit} </h1> <b> {classcount}</b>' + explainer
+        h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {maketitle(header_text)}  {edit} </h1> <b> {classcount}</b>' + explainer
 
     grid3 = return_grid3()
     h1 = grid3.format(h1)
