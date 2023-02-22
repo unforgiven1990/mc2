@@ -741,7 +741,10 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
                 category=f" • {category}"
             else:
                 category=""
-            h1_icon=f"{h1_icon}<span class='text-secondary'>{category} • last modified by {df.at[instance,'Modified By']} on {df.at[instance,'Last Modified']}</span>"
+            modifiedby=df.at[instance,'Modified By']
+            lastmodified=df.at[instance,'Last Modified']
+            print(modifiedby,lastmodified)
+            h1_icon=f"{h1_icon}<span class='text-secondary'>{category} • last modified by {modifiedby} on {lastmodified}</span>"
     else:
         h1_icon = f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
     edit = f'<a href="{return_string_editurl(tab)}" style="font-size:1rem;" target="_blank" type="button" class="btn btn-primary btn-sm" ><i class="fa-solid fa-edit"></i></a>'
@@ -764,7 +767,7 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
         h1 = f'<h1 class="" id="header" data-current_class="{tab}"  data-current_instance="{instance}" >{h1_icon} {maketitle(header_text)} {edit} </h1>' + explainer
 
     grid3 = return_grid3()
-    h1 = grid3.format(h1)
+    h1 = grid3.format(h1+" ")
     return return_component_spacer() + h1
 
 
