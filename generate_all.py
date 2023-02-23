@@ -743,7 +743,8 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
                 category=""
             modifiedby=df.at[instance,'Modified By']
             lastmodified=df.at[instance,'Last Modified']
-            print(modifiedby,lastmodified)
+            print(type(modifiedby))
+            print(type(lastmodified))
             h1_icon=f"{h1_icon}<span class='text-secondary'>{category} • last modified by {modifiedby} on {lastmodified}</span>"
     else:
         h1_icon = f'<i class="fa-solid {return_string_icon(tab)} text-secondary "></i>'
