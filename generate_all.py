@@ -744,11 +744,12 @@ def return_component_header(df, tab, dict_df, instance, custom_header_text=""):
             modifiedby=df.at[instance,'Modified By']
             lastmodified=df.at[instance,'Last Modified']
 
-            if str(type(modifiedby)) not in ["<class 'pandas.core.series.Series'>", "<class 'str'>"]:
-                modifiedby=modifiedby.iat[0]
+            if isinstance(lastmodified, pd.Series):
+                lastmodified = lastmodified.iat[0]
 
-            if str(type(lastmodified)) not in ["<class 'pandas.core.series.Series'>", "<class 'str'>"]:
-                lastmodified=lastmodified.iat[0]
+            if isinstance(modifiedby, pd.Series):
+                modifiedby = modifiedby.iat[0]
+
 
             h1_icon=f"{h1_icon}<span class='text-secondary'>{category} • last modified by {modifiedby} on {lastmodified}</span>"
     else:
