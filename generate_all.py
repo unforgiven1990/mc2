@@ -198,15 +198,19 @@ def cleanup(dict_df, excel_data_raw):
         new_dict_df[tab] = df
 
     # replace related document link hyperlink with real title
-    for tab in ["Employee_Process", "User_Process", ]:
+    for tab in ["Employee_Process", "User_Process",]:
         df_tab = new_dict_df[tab]
 
         # open the data with another library to get hyperlink
         wb = openpyxl.load_workbook(excel_data_raw)
         ws = wb[tab]
 
-        for column in ["Related Document"]:
-            column_index = df_tab.columns.get_loc(column)
+        for column in ["Related Document","Workflow Approval"]:
+            try:
+                column_index = df_tab.columns.get_loc(column)
+            except:
+                continue
+
             for index, cell_data in df_tab[column].items():
                 if pd.notna(cell_data) and cell_data is not None:
                     try:
