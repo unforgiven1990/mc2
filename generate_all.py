@@ -517,18 +517,22 @@ def return_instance_img(instance, tab, imgclass):
     a_pdf = [".pdf",".PDF"]
 
     for ending in a_pic + a_pdf:
-        for file_path in glob.glob(f"attachments/Process Standardization Input-{tab}_Attachment/*{ending}"):
+        for file_path in glob.glob(f"attachments/{tab}/*{ending}"):
             for multiple in ["", "(1)", "(2)", "(3)", "(4)"]:
-                file_name = os.path.basename(file_path).replace(f"{ending}", "").replace(f"_Process Flow{multiple}", "")
+                file_name = os.path.basename(file_path).replace(f"{ending}", "").replace(f"{multiple}", "")
                 # check this name for first image against this instance
                 if instance_with_space == file_name:
-                    url = f'../../attachments/Process Standardization Input-{tab}_Attachment/{instance.replace("_", " ")}_Process Flow{multiple}{ending}'
-                    if ending in a_pic:
-                        a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
-                    elif ending in a_pdf:
-                        a_img += [f"<embed src='{url}#toolbar=0'  style='height:90vh;  width:100%;' />"]
-                    else:
-                        a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
+                    url = f'../../attachments/{tab}/{instance.replace("_", " ")}{multiple}{ending}'
+                    pathcheck = f'attachments/{tab}/{instance.replace("_", " ")}{multiple}{ending}'
+
+                    #check if this is file
+                    if os.path.isfile(pathcheck):
+                        if ending in a_pic:
+                            a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
+                        elif ending in a_pdf:
+                            a_img += [f"<embed src='{url}#toolbar=0'  style='height:90vh;  width:100%;' />"]
+                        else:
+                            a_img += [f'<img class="{imgclass} mb-3" src="{url}" >']
 
                 # check this name for other images (n) against this instance
                 if False:
