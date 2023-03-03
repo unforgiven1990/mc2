@@ -1,21 +1,33 @@
 var link = {
-    "User_Journey": {
-        "Has User Processes": "User_Process",
-        "Matches with Employee Journey": "Process_Category",
-        "Is Part of Business Model": "Business_Model"
-    },
-    "User_Process": {
-        "Belongs to User Journey Part": "User_Journey"
-    },
-    "Process_Category": {
-        "For User Journey": "User_Journey",
-        "For Business Model": "Business_Model"
-    },
     "Employee_Process": {
         "Has Subprocess": "Employee_Process",
-        "Process Category": "Capability",
         "Involved Stakeholders": "Role",
+        "Process Category": "Capability",
         "Uses System": "System"
+    },
+    "Role": {
+        "Has Process": "Employee_Process",
+        "Has Employee": "Employee"
+    },
+    "Employee": {
+        "Has Role": "Role",
+        "Belongs to Department": "Department",
+        "Works in City": "City"
+    },
+    "Department": {
+        "Has Employee": "Employee",
+        "Belongs to Department": "Department",
+        "Belongs to Department_Class": "Department_Category",
+        "Belongs to Topic": "Topic"
+    },
+    "Capability": {
+        "Implemented by Process": "Employee_Process",
+        "Defined by Department": "Department",
+        "Implements Strategy": "Strategy",
+        "Belongs to Topic": "Topic"
+    },
+    "Strategy": {
+        "Implemented by Capabilities": "Capability"
     },
     "Country": {
         "Has Business Model": "Business_Model",
@@ -23,39 +35,26 @@ var link = {
         "Has Car Models": "Car"
     },
     "Business_Model": {
-        "Has User Journey Parts": "User_Journey",
-        "Availble in Countries": "Country"
-    },
-    "Strategy": {
-        "Implemented by Capabilities": "Capability"
-    },
-    "Capability": {
-        "Implemented by Process": "Employee_Process",
-        "Implements Strategy": "Strategy",
-        "Defined by Department": "Department",
-        "Belongs to Topic": "Topic"
-    },
-    "Department": {
-        "Belongs to Department": "Department",
-        "Belongs to Department_Class": "Department_Category",
-        "Has Employee": "Employee",
-        "Belongs to Topic": "Topic"
+        "Availble in Countries": "Country",
+        "Has User Journey Parts": "User_Journey"
     },
     "Department_Category": {
         "Has Departments": "Department"
     },
-    "Employee": {
-        "Belongs to Department": "Department",
-        "Has Role": "Role",
-        "Works in City": "City"
+    "User_Journey": {
+        "Is Part of Business Model": "Business_Model",
+        "Matches with Employee Journey": "Process_Category"
     },
-    "Role": {
-        "Has Process": "Employee_Process",
-        "Has Employee": "Employee"
+    "Process_Category": {
+        "For Business Model": "Business_Model",
+        "For User Journey": "User_Journey"
+    },
+    "User_Process": {
+        "Belongs to User Journey Part": "User_Journey"
     },
     "City": {
-        "Is Part of": "Country",
         "Has Employees": "Employee",
+        "Is Part of": "Country",
         "Has Facility": "Facility"
     },
     "System": {
