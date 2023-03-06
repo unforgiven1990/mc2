@@ -43,7 +43,8 @@ var link = {
     },
     "User_Journey": {
         "Is Part of Business Model": "Business_Model",
-        "Matches with Employee Journey": "Process_Category"
+        "Matches with Employee Journey": "Process_Category",
+        "Has User Processes": "User_Process"
     },
     "Process_Category": {
         "For Business Model": "Business_Model",
