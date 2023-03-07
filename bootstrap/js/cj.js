@@ -185,7 +185,7 @@ var df=data[tab];
 
         });
     });
-return [tab].concat(Array.from(result));
+return [tab].concat(Array.from(result))
 }
 
 
