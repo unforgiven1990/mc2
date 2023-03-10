@@ -16,7 +16,9 @@ var link = {
     },
     "Department": {
         "Has Employee": "Employee",
-        "Belongs to Department": "Department"
+        "Belongs to Department": "Department",
+        "Belongs to Department_Class": "Department_Category",
+        "Belongs to Topic": "Topic"
     },
     "Capability": {
         "Implemented by Process": "Employee_Process",

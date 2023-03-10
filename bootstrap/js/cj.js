@@ -197,10 +197,10 @@ function get_class_columns(class_tab) {
         var row = df[key]; //this will get first row
         var new_result = Object.keys(row); //this gets column
         if (new_result.length >= potential_result.length) {
-            potential_result = new_result;
+            potential_result = new_result
         }
     });
-    return potential_result;
+    return potential_result
 }
 
 
